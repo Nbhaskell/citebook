@@ -134,3 +134,5 @@ The first `--all` run flagged six lines of in-product text in the planning docum
 
 ### D-037. CI: lint and tests only
 `.github/workflows/ci.yml` (actions `checkout`, `setup-python`, `setup-node` at v7, read-only permissions) has two jobs. Python: ruff check, ruff format check, mypy, pytest, the personal-information check over all tracked files, and the gitleaks scan over the full history (`fetch-depth: 0`). Web: `npm ci`, lint, typecheck, Vitest, and a regenerate-and-diff of the API types. No model, knowledge base or network is needed, as `docs/TRD.md` section 14 requires. The same commands passed locally on 2026-11-09, and the pinned requirements installed cleanly into a fresh virtual environment (`pip check` clean, 100 tests passed).
+
+First CI run: green on 2026-11-10 (UTC) for commit `f01f490`, both jobs, 58 seconds.
