@@ -1,0 +1,41 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+# Assistant-instruction and local notes files: untracked, as in the sibling projects
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+
+# Data and databases (never commit real or generated data)
+data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+# Delete the next line if the project has no evaluation runs
+eval/runs/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Web
+node_modules/
+web/dist/
+*.tsbuildinfo
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local tool downloads (the pinned gitleaks binary)
+.tools/
