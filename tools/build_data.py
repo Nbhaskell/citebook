@@ -122,6 +122,14 @@ def build_customers(ext: dict[str, Any]) -> list[dict[str, Any]]:
     return [{"id": stable_uuid("customer", c["key"]), **c} for c in ext["customers"]]
 
 
+def build_safety(facts: dict[str, Any]) -> dict[str, Any]:
+    """The only safety advice the assistant may give, and the emergency line (D-052)."""
+    return {
+        "emergency_phone": facts["business"]["emergency_phone"],
+        "instructions": without_comments(facts["safety_instructions"]),
+    }
+
+
 def build_settings(facts: dict[str, Any], ext: dict[str, Any]) -> dict[str, Any]:
     policies = without_comments(ext["citebook_policies"])
     hours = facts["hours"]
@@ -203,6 +211,7 @@ def build_all() -> dict[Path, str]:
         SEED_DIR / "services.json": _dump(build_services(facts, ext)),
         SEED_DIR / "technicians.json": _dump(build_technicians(ext)),
         SEED_DIR / "customers.json": _dump(build_customers(ext)),
+        SEED_DIR / "safety.json": _dump(build_safety(facts)),
         KB_DOCS / "online-booking.md": build_online_booking_doc(facts, settings, book),
     }
     for doc in sorted((UNIVERSE / "docs").glob("*.md")):

@@ -180,3 +180,12 @@ Whether a reschedule or cancellation is late (less than `free_cancel_hours` befo
 
 ### D-051. Verification details
 `citebook/verification.py` compares the last 4 digits of the booking's phone with `hmac.compare_digest`, and compares against a dummy value when the reference does not exist, so the timing is the same either way. Every failure returns the same words. Only `held` and `confirmed` bookings can be verified; a cancelled or completed booking fails like an unknown one. After `verification_max_attempts` (3) failures the result asks for a `VERIFICATION_FAILED` handoff, and later attempts are refused even with the right details, which stops guessing within one conversation. Audit events record the attempt count, never the reference or the digits.
+
+### D-052. Screening reuses Citedesk's detectors
+`citebook/screening.py` combines Citedesk's text normalisation, emergency net, sensitive-number masking, injection patterns and spam score in one module, and its tests are ported in `tests/test_screening_emergency.py` and `tests/test_screening_ported.py`. Changes for Citebook:
+
+- Chat messages have no subject; `screen_message(text)` returns the masked text, the flags in `screen_flag` order, and pattern names as detail, never the matched text.
+- The electrical pattern is removed: the business publishes no electrical safety advice, and the emergency reply may give only published advice.
+- A new `uncontrolled_leak` pattern covers the business's "a leak that cannot be stopped". A clause that names a toilet is skipped, because a toilet that will not stop running is urgent but not an emergency.
+- A small `ABUSIVE` detector (insults aimed at the assistant or the business, profanity, threats naming the person) is reported for staff and never used to refuse a customer. Spam is also report-only, and an emergency is never spam.
+- The emergency reply uses only `facts.json` `safety_instructions` and the emergency line, which `tools/build_data.py` writes to `db/seed/safety.json`.

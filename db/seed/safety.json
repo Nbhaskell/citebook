@@ -1,0 +1,9 @@
+{
+  "emergency_phone": "555-0172",
+  "instructions": {
+    "water_wont_stop": "Turn off the main water valve, usually where the water line enters the house or near the water meter.",
+    "gas_smell": "Leave the building at once. Do not use switches, lighters or phones inside. Call the gas utility's emergency number or 911 from outside.",
+    "sewage_backup": "Stop using sinks, tubs, showers and toilets until a plumber has looked at it.",
+    "carbon_monoxide_alarm": "Leave the building and call 911."
+  }
+}
