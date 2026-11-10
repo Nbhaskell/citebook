@@ -62,7 +62,7 @@ def test_a_hold_draft_says_held_not_confirmed(db: sqlite3.Connection, rules: Rul
     conversation, action_id, payload, _ = propose_hold(db)
     result = confirm(db, rules, action_id, conversation, payload_hash(payload), LATER)
     body = bodies(db)["hold_received"]
-    assert result.booking_reference in body
+    assert result.booking_reference and result.booking_reference in body
     assert "held, not confirmed yet" in body
     assert "usually within 2 business hours" in body
     assert body.startswith("Hi Alex Rivera,")
