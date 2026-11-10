@@ -165,3 +165,12 @@ Amounts are integer cents. Rates and dollar amounts are `Decimal`; a float, stri
 
 ### D-046. Emergency-rate visits get no call-out credit
 The business says the call-out fee is credited to approved work, and that the emergency call-out fee replaces the standard one. It does not say the emergency fee is credited, so a quote for a visit outside the visit windows shows the $175 fee and no credit line. A quote never promises money back that the business has not published. Online slots are always inside the visit windows, so this rule matters only for quotes staff ask for.
+
+### D-047. Execution and double booking
+`citebook/actions.py` holds the state machines of schema section 4 as tables, and a test checks that the action table allows exactly the documented transitions. Confirmation and staff decisions run in one `BEGIN IMMEDIATE` transaction, which takes SQLite's write lock at the start, so two confirmations never interleave. Every slot change also checks the slot's status and `version`. Execution runs inside a savepoint: when a slot was taken meanwhile, everything rolls back to the savepoint and the action becomes `failed` with `failure_detail = slot_taken`, so nothing is half done. A test confirms the same slot from two threads on a file database at the same moment; exactly one hold is created and the other action fails.
+
+### D-048. Lateness is decided when the customer confirms
+Whether a reschedule or cancellation is late (less than `free_cancel_hours` before the visit) is computed at confirmation time, not at proposal time. Time only moves forward, so a change can only become late between the two moments, and the safe result follows: it goes to staff. A `held` booking can always be cancelled free. The payload hash binds the card to what was proposed; routing never relies on a value the model supplied.
+
+### D-049. Database seed
+`python -m tools.seed_db --fresh` migrates `CITEBOOK_DB_PATH` and loads settings, services, technicians, customers, the calendar and the seeded bookings. Each seeded booking gets a quote computed by `citebook/pricing.py`, with no conversation (D-042) and an id derived from its reference. The tool refuses to seed a database that already holds slots. Tests load the same seed into an in-memory database.

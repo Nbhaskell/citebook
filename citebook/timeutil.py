@@ -103,7 +103,7 @@ class BusinessClock:
         raise ValueError("no office hours within a year")
 
 
-# --- relative date phrases ---------------------------------------------------------------------
+# --- relative date phrases --------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
@@ -197,7 +197,7 @@ def find_date_phrases(text: str, now: datetime) -> list[DateRange]:
     return found
 
 
-# --- display -------------------------------------------------------------------------------
+# --- display ----------------------------------------------------------------------------------
 
 
 EN_DASH = chr(0x2013)  # between the two times of a window, as in the UI copy
