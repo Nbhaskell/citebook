@@ -120,3 +120,6 @@ API types are generated: `python -m tools.export_openapi` writes `web/openapi.js
 
 ### D-033. License check of the npm packages
 237 packages checked on 2026-11-09. All are MIT, Apache-2.0, ISC, BSD, BlueOak or Python-2.0, with three exceptions, all build-time only and not shipped as source: `lightningcss` and its Windows binary (MPL-2.0, a Vite dependency) and `caniuse-lite` (CC-BY-4.0 browser data). Citetally accepted the same packages on the same grounds. **Provisional** until confirmed for this repository.
+
+### D-034. Environment check reports, never installs
+`tools/check_env.py` uses only the standard library, so it runs before the virtual environment exists. It reports Python 3.13, Node.js, Ollama, whether the configured model (`CITEBOOK_MODEL`, default `qwen3:8b`) is pulled and lists tool calling in `POST /api/show` capabilities, and whether rag-project answers `GET /api/status` at `CITEBOOK_KB_URL`. Failures print a Windows install or start hint. It never installs anything and exits 0 unless `--strict`, so it cannot fail the test suite. All machine access goes through an injected `Probes` object, so its tests need no network or binaries. rag-project's retrieval-only endpoint (D-023) is not checked yet; the check is added when the endpoint exists.
