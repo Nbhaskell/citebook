@@ -1,4 +1,4 @@
-"""The system prompt and the per-turn STATE block, versioned (`prompt-v1`).
+"""The system prompt and the per-turn STATE block, versioned (`prompt-v2`; v1 is kept as a record).
 
 The prompt text and the tool descriptions are one version: `tests/test_prompts.py` pins a digest
 of both, so any change to either needs a new version id and a new digest.
@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cache
 from pathlib import Path
@@ -15,8 +17,8 @@ from pathlib import Path
 from citebook.timeutil import BusinessClock, DateRange, find_date_phrases
 from citebook.tools.registry import REGISTRY
 
-PROMPT_VERSION = "prompt-v1"
-PROMPT_FILE = Path(__file__).resolve().parent / "system_v1.md"
+PROMPT_VERSION = "prompt-v2"
+PROMPT_FILE = Path(__file__).resolve().parent / "system_v2.md"
 COMING_DAYS = 14
 
 
@@ -30,6 +32,21 @@ def prompt_digest() -> str:
     tools = [REGISTRY[name].schema() for name in sorted(REGISTRY)]
     blob = system_prompt() + "\n" + json.dumps(tools, sort_keys=True)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+@dataclass(frozen=True)
+class ServiceLine:
+    code: str
+    name: str
+    bookable_online: bool
+    first_step: str | None
+
+
+def service_lines(conn: sqlite3.Connection) -> list[ServiceLine]:
+    return [
+        ServiceLine(r["code"], r["name"], bool(r["bookable_online"]), r["first_step_code"])
+        for r in conn.execute("SELECT * FROM services WHERE active = 1 ORDER BY code")
+    ]
 
 
 def _day(day: datetime) -> str:
@@ -53,6 +70,7 @@ def state_block(
     contact_collected: bool,
     verified_reference: str | None,
     open_card: str | None,
+    services: list[ServiceLine] | None = None,
 ) -> str:
     """The STATE block code writes for each turn. Every date in it comes from code."""
     hour = now_local.hour % 12 or 12
@@ -71,6 +89,14 @@ def state_block(
         day = now_local + timedelta(days=offset)
         closed = "" if clock.visit_windows(day.date()) else ": closed, no visits"
         lines.append(f"- {_day(day)}{closed}")
+    if services:
+        lines.append("Services (service_code: name). Use these codes in tools; never show them:")
+        for line in services:
+            note = ""
+            if not line.bookable_online:
+                note = " (not bookable online"
+                note += f"; book {line.first_step} first)" if line.first_step else ")"
+            lines.append(f"- {line.code}: {line.name}{note}")
     lines.append(f"Conversation status: {status}.")
     lines.append(f"Contact details collected: {'yes' if contact_collected else 'no'}.")
     lines.append(f"Verified booking: {verified_reference or 'none'}.")

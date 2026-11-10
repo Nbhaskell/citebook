@@ -40,7 +40,8 @@ class Allowed:
     references: set[str] = field(default_factory=set)
     other_customers: list[OtherCustomer] = field(default_factory=list)
     other_references: set[str] = field(default_factory=set)
-    done: set[str] = field(default_factory=set)  # "confirmed", "cancelled", "moved" shown as true
+    done: set[str] = field(default_factory=set)  # held, sent, confirmed, cancelled, moved
+    open_card: bool = False  # a card is waiting for the customer right now
     safety_texts: list[str] = field(default_factory=list)
 
 
@@ -104,35 +105,47 @@ def policy_grounded(reply: str, allowed: Allowed) -> CheckResult:
 
 _HEDGE = re.compile(
     r"\b(not|never|nothing|until|once|when|after|before|if|will|would|can|could|may|might|yet|"
-    r"press|pressing|tap|request|requested)\b|n't\b",
+    r"press|pressing|tap)\b|n't\b",
     re.IGNORECASE,
 )
+_AUX = r"(?:is|are|was|were|been|now|all|it's|you're|you are|i've|i have|we've|we have|has|have)"
+_GAP = r"(?:\s+[\w'-]+){0,5}?\s+"  # up to five words: "I've marked your booking as confirmed"
+
+
+def _claim(words: str) -> re.Pattern[str]:
+    return re.compile(rf"\b{_AUX}{_GAP}(?:{words})\b", re.IGNORECASE)
+
+
 _CLAIMS = {
+    "held": _claim(r"held|on hold|reserved"),
+    "sent": _claim(r"sent|submitted|forwarded|passed on"),
     "confirmed": re.compile(
-        r"\b(?:is|are|been|now|all|you're|you are|i've|i have|we've|we have|has|have)\s+"
-        r"(?:all\s+|now\s+|been\s+)?(?:booked|confirmed|scheduled)\b|\bbooked you\b",
-        re.IGNORECASE,
+        _claim(r"booked|confirmed|scheduled").pattern + r"|\bbooked you\b", re.IGNORECASE
     ),
-    "cancelled": re.compile(
-        r"\b(?:is|are|been|now|i've|i have|we've|we have|has|have)\s+(?:now\s+|been\s+)?"
-        r"cancell?ed\b",
-        re.IGNORECASE,
-    ),
-    "moved": re.compile(
-        r"\b(?:is|are|been|now|i've|i have|we've|we have|has|have)\s+(?:now\s+|been\s+)?"
-        r"(?:moved|rescheduled)\b",
-        re.IGNORECASE,
-    ),
+    "cancelled": _claim(r"cancell?ed"),
+    "moved": _claim(r"moved|rescheduled"),
+    "pressed": re.compile(r"\b(?:has|have|you've|you have)(?:\s+[\w'-]+){0,2}?\s+pressed\b", re.I),
 }
+_CARD = re.compile(
+    r"\b(?:press|tap|click)\w*\b[^.!?]*\bconfirm\b|\bthe card\b|\bcard (?:below|above)\b",
+    re.IGNORECASE,
+)
 
 
 def no_false_confirmation(reply: str, allowed: Allowed) -> CheckResult:
+    """A claim counts unless a hedge comes before it in its sentence ("Nothing is booked until
+    ...", "Once you press Confirm, it's held"). A hedge after the claim does not undo it ("It is
+    now held until our team confirms it" is a claim). Questions make no claims."""
     claims = []
     for sentence in _sentences(reply):
-        if _HEDGE.search(sentence):
+        if _CARD.search(sentence) and not allowed.open_card:
+            claims.append("card")  # it points at a card that does not exist
+        if sentence.endswith("?"):
             continue
         for kind, pattern in _CLAIMS.items():
-            if pattern.search(sentence) and kind not in allowed.done:
+            for match in pattern.finditer(sentence):
+                if kind in allowed.done or _HEDGE.search(sentence[: match.end()]):
+                    continue
                 claims.append(kind)
     return CheckResult(
         C.NO_FALSE_CONFIRMATION,
@@ -244,8 +257,21 @@ def feedback(results: list[CheckResult]) -> str:
         if not result.passed:
             unmatched = result.detail.get("unmatched")
             extra = f" Not allowed here: {', '.join(unmatched)}." if unmatched else ""
+            for claim in dict.fromkeys(result.detail.get("claims", [])):
+                extra += " " + CLAIM_HINTS[claim]
             lines.append(f"- {result.code.value}: {hints[result.code]}{extra}")
     return "\n".join(lines)
+
+
+CLAIM_HINTS = {
+    "card": "No card is open: do not mention a card or the Confirm button.",
+    "held": "Nothing is held yet: a booking is held only after the customer presses Confirm.",
+    "sent": "Nothing is sent to the team yet: it is sent only after the customer presses Confirm.",
+    "confirmed": "Nothing is confirmed: our team confirms bookings.",
+    "cancelled": "Nothing is cancelled yet.",
+    "moved": "Nothing is moved yet.",
+    "pressed": "The customer has not pressed Confirm. Typed words do not confirm.",
+}
 
 
 # --- what this conversation may say ----------------------------------------------------------
@@ -343,6 +369,23 @@ def build_allowed(
         (conversation_id,),
     ).fetchone():
         allowed.done.add("moved")
+    statuses = {
+        (r["action_type"], r["status"])
+        for r in conn.execute(
+            "SELECT action_type, status FROM actions WHERE conversation_id = ?", (conversation_id,)
+        )
+    }
+    submitted = {"pending_staff", "approved", "executed", "rejected"}
+    if any(kind == "hold_create" and status in submitted for kind, status in statuses):
+        allowed.done.add("held")
+    if any(kind != "hold_create" and status in submitted for kind, status in statuses):
+        allowed.done.add("sent")
+    allowed.open_card = any(status == "proposed" for _, status in statuses)
+    if conn.execute(
+        "SELECT 1 FROM actions WHERE conversation_id = ? AND customer_confirmed_at IS NOT NULL",
+        (conversation_id,),
+    ).fetchone():
+        allowed.done.add("pressed")
     allowed.safety_texts = [*safety["instructions"].values()]
     _add_text(allowed, json.dumps(safety))
     return allowed

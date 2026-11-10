@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from datetime import datetime, timedelta
 from functools import cache
@@ -139,6 +140,34 @@ def normal_reference(reference: str) -> str:
     return reference.strip().upper()
 
 
+SAY_ZIP_NOT_GIVEN = "Ask the customer for the ZIP code of the job. Never guess a ZIP code."
+
+
+def zip_problem(ctx: ToolContext, zip_code: str) -> Block | None:
+    """A ZIP code must come from the customer: their saved details or their own messages.
+
+    The model has been seen to invent ZIP codes and then tell the customer the area is not
+    served. A conversation with no customer message (tools driven directly) has nothing to
+    compare with, so the check applies once the customer has written (D-063)."""
+    texts = [
+        r["content"]
+        for r in ctx.conn.execute(
+            "SELECT content FROM messages WHERE conversation_id = ? AND role = 'customer'",
+            (ctx.conversation_id,),
+        )
+    ]
+    if not texts:
+        return None
+    saved = ctx.conn.execute(
+        "SELECT zip_code FROM customers WHERE id = ?", (ctx.conversation["customer_id"],)
+    ).fetchone()
+    if saved is not None and saved["zip_code"] == zip_code:
+        return None
+    if any(re.search(rf"(?<!\d){re.escape(zip_code)}(?!\d)", text) for text in texts):
+        return None
+    return invalid(SAY_ZIP_NOT_GIVEN, "zip_not_from_customer")
+
+
 def check_reference_is_verified(ctx: ToolContext, args: Any) -> Block | None:
     """Gate ownership check: the reference must be the one booking this conversation verified."""
     booking_id = ctx.conversation["verified_booking_id"]
@@ -176,11 +205,25 @@ def make_card(
             "action_id": action_id,
             "card": "shown",
             "summary": summary,
-            "next": "The customer sees a card with Confirm and Cancel buttons. Ask them to check "
-            "it and press Confirm. A typed yes does not confirm anything.",
+            "next": "The customer sees a card with Confirm and Cancel buttons. Nothing has "
+            "happened yet. Tell the customer say_to_customer.",
+            "say_to_customer": SAY_CARD[action_type],
         },
         untrusted_fields=["summary"],
     )
+
+
+SAY_CARD = {
+    ActionType.HOLD_CREATE: "Please check the details on the card and press Confirm to request "
+    "this booking. Our team then confirms it.",
+    ActionType.RESCHEDULE: "Please check the new time on the card and press Confirm to move your "
+    "booking.",
+    ActionType.CANCELLATION: "Please check the card and press Confirm to cancel your booking.",
+    ActionType.REFUND_REQUEST: "Please press Confirm on the card to send your refund request to "
+    "our team. A person will review it.",
+    ActionType.POLICY_EXCEPTION: "Please press Confirm on the card to send your request to our "
+    "team. A person will review it.",
+}
 
 
 def card_expiry(ctx: ToolContext) -> datetime:

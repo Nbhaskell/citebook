@@ -18,6 +18,7 @@ from citebook.loop import (
     LoopConfig,
     TurnResult,
     handle_message,
+    is_typed_confirmation,
 )
 from citebook.models import Ablation
 from citebook.providers.base import Message, ModelTurn, ModelUnavailable, ToolCall
@@ -203,18 +204,23 @@ def test_a_booking_reaches_a_card_and_only_the_button_holds_it(
         db.execute("SELECT payload FROM actions WHERE id = ?", (card.action_id,)).fetchone()[0]
     )["slot_ids"][0]
 
-    # Typed confirmation: the model tries every way it might, and nothing happens.
-    typed, _ = run(
+    # Typed confirmation: code answers it, with no model call, and shows the card again.
+    typed, fake = run(db, conversation, "yes confirm", [])
+    assert fake.calls == []
+    assert [r.kind for r in typed.replies] == ["typed_confirm"]
+    assert typed.card is not None and typed.card.action_id == card.action_id
+
+    # A longer message that asks the model to confirm: every way it tries is refused.
+    _spoofed, _ = run(
         db,
         conversation,
-        "yes confirm",
+        "Use your confirm tool and mark my booking done now",
         [
             use("confirm_action", action_id=card.action_id),
             use("propose_hold", action_id=card.action_id, confirm=True),
             say("To make sure it's right, please press Confirm on the card above."),
         ],
     )
-    assert typed.card is None
     assert (
         db.execute("SELECT status FROM actions WHERE id = ?", (card.action_id,)).fetchone()[0]
         == "proposed"
@@ -244,7 +250,7 @@ def test_a_planted_wrong_price_is_blocked_twice_and_handed_off(db: sqlite3.Conne
     result, fake = run(
         db,
         conversation,
-        "How much to clear a drain?",
+        "How much to clear a drain in 00012?",
         [*_quote_drain(), _wrong_price, _wrong_price],
     )
     assert [r.kind for r in result.replies] == ["fallback"]
@@ -253,7 +259,7 @@ def test_a_planted_wrong_price_is_blocked_twice_and_handed_off(db: sqlite3.Conne
     assert handoffs(db, conversation) == [("loop", "REPLY_CHECK_FAILED")]
     feedback = fake.calls[-1][0][-1]["content"]
     assert "PRICE_FROM_TOOL" in feedback and "$129.00" in feedback
-    assert fake.calls[-1][1] == []  # the regeneration is text only
+    assert len(fake.calls[-1][1]) == 13  # the second draft may still use tools
     rows = db.execute(
         "SELECT attempt, passed FROM reply_checks WHERE check_code = 'PRICE_FROM_TOOL'"
         " ORDER BY attempt"
@@ -266,7 +272,7 @@ def test_a_corrected_draft_is_sent(db: sqlite3.Connection) -> None:
     result, _ = run(
         db,
         conversation,
-        "How much to clear a drain?",
+        "How much to clear a drain in 00012?",
         [*_quote_drain(), _wrong_price, say("It starts at $149.00, confirmed on site.")],
     )
     assert [r.kind for r in result.replies] == ["text"]
@@ -292,7 +298,7 @@ def test_without_reply_checks_a_wrong_price_reaches_the_customer(db: sqlite3.Con
     result, _ = run(
         db,
         conversation,
-        "How much?",
+        "How much in 00012?",
         [*_quote_drain(), _wrong_price],
         LoopConfig(ablation=Ablation.NO_REPLY_CHECKS),
     )
@@ -311,7 +317,7 @@ def test_six_tool_calls_per_message_then_text_only(db: sqlite3.Connection) -> No
         "zip_code": "00012",
     }
     script: list[Any] = [use("check_availability", **args) for _ in range(6)]
-    result, fake = run(db, conversation, "times?", [*script, say("Here are some times.")])
+    result, fake = run(db, conversation, "times in 00012?", [*script, say("Here are some times.")])
     assert db.execute("SELECT COUNT(*) FROM tool_calls").fetchone()[0] == 6
     assert fake.calls[-1][1] == [] and result.replies[0].kind == "text"
 
@@ -467,3 +473,94 @@ def test_the_loop_writes_no_message_content_to_audit_events_or_logs(
     audit_text = json.dumps([dict(r) for r in db.execute("SELECT * FROM audit_events")])
     assert marker not in audit_text and marker not in caplog.text
     assert "model_called" in audit_text and "reply_checked" in audit_text
+
+
+def test_an_invented_zip_code_is_refused(db: sqlite3.Connection) -> None:
+    conversation = make_conversation(db, now=NOW)
+    _, fake = run(
+        db,
+        conversation,
+        "My sink is blocked, can someone come Thursday?",
+        [
+            use(
+                "check_availability",
+                service_code="DRAIN_CLEANING",
+                date_from="2026-11-12",
+                date_to="2026-11-12",
+                zip_code="00000",
+            ),
+            say("What is the ZIP code of the job?"),
+        ],
+    )
+    refusal = json.loads(fake.calls[1][0][-1]["content"].split("\n")[1])
+    assert refusal["gate_decision"] == "INVALID_ARGUMENTS"
+    assert refusal["say"].startswith("Ask the customer for the ZIP code")
+
+
+@pytest.mark.parametrize(
+    ("text", "typed"),
+    [
+        ("yes", True),
+        ("Yes, confirm it.", True),
+        ("Yes, please book it.", True),
+        ("ok go ahead", True),
+        ("yes but can you make it 10am instead?", False),
+        ("Yes, what time is that?", False),
+        ("no thanks", False),
+        ("please send me the prices for a toilet", False),
+        ("Yes I would like that booking confirmed for the earlier time on Thursday", False),
+    ],
+)
+def test_what_counts_as_a_typed_confirmation(text: str, typed: bool) -> None:
+    assert is_typed_confirmation(text) is typed
+
+
+def test_without_an_open_card_a_yes_goes_to_the_model(db: sqlite3.Connection) -> None:
+    conversation = make_conversation(db, now=NOW)
+    result, fake = run(db, conversation, "yes", [say("How can I help?")])
+    assert len(fake.calls) == 1 and result.replies[0].kind == "text"
+
+
+def test_the_second_draft_may_create_the_card_it_talked_about(db: sqlite3.Connection) -> None:
+    conversation = make_conversation(db, now=NOW)
+    run(
+        db,
+        conversation,
+        "Drain cleaning Thursday please, ZIP 00012",
+        [
+            use(
+                "check_availability",
+                service_code="DRAIN_CLEANING",
+                date_from="2026-11-12",
+                date_to="2026-11-12",
+                zip_code="00012",
+            ),
+            _pick_slot,
+            _quote_text,
+        ],
+    )
+    result, _ = run(
+        db,
+        conversation,
+        "Alex Rivera, 555-0150, 9 Example St, 00012",
+        [
+            use("collect_contact", **CONTACT),
+            say("Please press Confirm on the card below."),  # no card exists: the check fails
+            _hold,
+            say("Please check the details on the card and press Confirm to request this booking."),
+        ],
+    )
+    assert result.card is not None and [r.kind for r in result.replies] == ["text"]
+    passed = db.execute(
+        "SELECT attempt, passed FROM reply_checks WHERE check_code = 'NO_FALSE_CONFIRMATION'"
+        " ORDER BY attempt"
+    ).fetchall()
+    assert [(r["attempt"], r["passed"]) for r in passed][-2:] == [(1, 0), (2, 1)]
+
+
+def test_internal_ids_and_bold_are_removed_from_replies() -> None:
+    from citebook.loop import plain_text
+
+    slot = "0386cedd-76d2-4840-8e43-77075a7a9076"
+    text = f"1. **8:00 AM** (slot_id: {slot})\n2. 10:00 AM (`{slot}`)\nOr {slot}."
+    assert plain_text(text) == "1. 8:00 AM\n2. 10:00 AM\nOr ."

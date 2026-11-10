@@ -27,6 +27,7 @@ from citebook.tools.common import (
     service,
     slot,
     visit_slots,
+    zip_problem,
 )
 
 
@@ -41,6 +42,8 @@ class Args(ToolArgs):
 def check_ids(ctx: ToolContext, args: Args) -> Block | None:
     if service(ctx.conn, args.service_code) is None:
         return invalid(SAY_UNKNOWN_SERVICE, "unknown_service")
+    if block := zip_problem(ctx, args.zip_code):
+        return block
     if args.slot_id is not None and slot(ctx.conn, args.slot_id) is None:
         return invalid(SAY_UNKNOWN_SLOT, "unknown_slot")
     return None

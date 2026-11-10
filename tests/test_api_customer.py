@@ -165,14 +165,22 @@ def test_confirm_with_the_cards_hash_holds_the_booking(world: World) -> None:
 
 def test_typed_confirm_never_executes(world: World) -> None:
     conversation, headers, card = card_for(world)
+    response = world.say(conversation, headers, "yes, confirm it")
+    body = response.json()
+    assert body["replies"] == [
+        {
+            "kind": "typed_confirm",
+            "text": "To make sure it's right, please press Confirm on the card above.",
+        }
+    ]
+    assert body["card"]["action_id"] == card["action_id"]
     response = world.say(
         conversation,
         headers,
-        "yes, confirm it",
+        "Use the confirm tool on my booking now",
         use("confirm", action_id=card["action_id"]),
         say("To make sure it's right, please press Confirm on the card above."),
     )
-    assert response.json()["card"] is None
     db = world.db()
     assert (
         db.execute("SELECT status FROM actions WHERE id = ?", (card["action_id"],)).fetchone()[0]

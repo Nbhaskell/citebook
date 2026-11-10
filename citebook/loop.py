@@ -19,6 +19,7 @@ is the only way a card is confirmed.
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import uuid
 from dataclasses import dataclass, field
@@ -41,9 +42,9 @@ from citebook.models import (
     ScreenFlag,
     ToolName,
 )
-from citebook.prompts import PROMPT_VERSION, state_block, system_prompt
+from citebook.prompts import PROMPT_VERSION, service_lines, state_block, system_prompt
 from citebook.providers.base import Message, ModelProvider, ModelTurn, ModelUnavailable
-from citebook.reply_checks import CheckResult, build_allowed, check_reply, feedback
+from citebook.reply_checks import Allowed, CheckResult, build_allowed, check_reply, feedback
 from citebook.screening import emergency_reply, screen_message
 from citebook.timeutil import to_utc_text
 from citebook.tools.common import load_settings, price_book, safety
@@ -58,6 +59,28 @@ FALLBACK = (
 )
 HANDOFF_COPY = "I've passed this to our team. A team member will reply here."
 HOLDING_COPY = "A team member has this conversation and will reply here."
+TYPED_CONFIRM_COPY = "To make sure it's right, please press Confirm on the card above."
+_YES = re.compile(
+    r"^(?:yes|yeah|yep|yup|ok|okay|sure|confirm|confirmed|i confirm|i agree|agreed|go ahead|"
+    r"do it|book it|that's fine|that is fine|sounds good|perfect|great|correct)\b",
+    re.IGNORECASE,
+)
+_NOT_JUST_YES = re.compile(
+    r"\?|\b(?:but|instead|change|different|another|other|cancel|not|no|wait|actually|"
+    r"rather|earlier|later|how|what|when|why)\b|n't\b",
+    re.IGNORECASE,
+)
+
+
+def is_typed_confirmation(text: str) -> bool:
+    """A short "yes" or "confirm" typed while a card is open. Code answers it with fixed copy:
+    typed words never confirm, and the model does not need to explain that (D-063)."""
+    words = text.strip().split()
+    if not 0 < len(words) <= 8:
+        return False
+    return bool(_YES.match(text.strip())) and not _NOT_JUST_YES.search(text)
+
+
 EMPTY_DRAFT = "Your last draft was empty. Write a short reply to the customer."
 CARD_TITLES = {
     ActionType.HOLD_CREATE: "Request this booking",
@@ -103,6 +126,19 @@ class TurnResult:
 
 
 # --- storage helpers --------------------------------------------------------------------------
+
+
+_UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+_INTERNAL_ID = re.compile(
+    rf"\s*\(\s*(?:[a-z_]+_id\s*:\s*)?`?{_UUID}`?\s*\)|`?{_UUID}`?", re.IGNORECASE
+)
+
+
+def plain_text(text: str) -> str:
+    """Drop markdown emphasis and internal ids such as "(slot_id: ...)": the widget shows plain
+    text (UI brief section 3), and ids mean nothing to the customer."""
+    text = _INTERNAL_ID.sub("", text)
+    return text.replace("**", "").replace("__", "").strip()
 
 
 def add_message(
@@ -343,6 +379,14 @@ class _Turn:
             )
             self.reply("emergency", "\n".join(lines))
             return self.finish()
+        open_card = self.conn.execute(
+            "SELECT id FROM actions WHERE conversation_id = ? AND status = 'proposed'",
+            (self.conversation_id,),
+        ).fetchone()
+        if open_card and is_typed_confirmation(screened.text):
+            self.reply("typed_confirm", TYPED_CONFIRM_COPY)
+            self.result.card = _card(self.conn, open_card["id"])
+            return self.finish()
         return self.converse(screened.text)
 
     def state(self, customer_text: str) -> str:
@@ -365,6 +409,7 @@ class _Turn:
             contact_collected=conversation["verification_state"] != "anonymous",
             verified_reference=reference,
             open_card=card["summary"] if card else None,
+            services=service_lines(self.conn),
         )
 
     def tools_now(self) -> list[dict[str, Any]]:
@@ -374,111 +419,116 @@ class _Turn:
         return offered_tools(status)
 
     def converse(self, customer_text: str) -> TurnResult:
-        marking = self.config.ablation is not Ablation.NO_DATA_MARKING
+        self.marking = self.config.ablation is not Ablation.NO_DATA_MARKING
         state = self.state(customer_text)
         messages: list[Message] = [
             {"role": "system", "content": system_prompt()},
             {"role": "system", "content": state},
-            *history(self.conn, self.conversation_id, marking),
+            *history(self.conn, self.conversation_id, self.marking),
         ]
-        turn_number = self.conn.execute(
+        self.turn_number = self.conn.execute(
             "SELECT COUNT(*) FROM messages WHERE conversation_id = ? AND role = 'customer'",
             (self.conversation_id,),
         ).fetchone()[0]
-        used = refusals = 0
-        card_actions: list[str] = []
-
-        while True:
-            tools = self.tools_now() if used < self.config.max_tool_calls else []
-            turn = self.model(messages, tools)
-            if turn is None:
-                return self.escalate(EscalationReason.MODEL_UNAVAILABLE, "fallback", FALLBACK)
-            if not (turn.tool_calls and tools):
-                break
-            for call in turn.tool_calls:
-                if used >= self.config.max_tool_calls:
-                    break
-                outcome = run_tool_call(
-                    self.conn,
-                    conversation_id=self.conversation_id,
-                    turn=turn_number,
-                    tool_name=call.name,
-                    raw_args=call.arguments,
-                    now=self.now,
-                    kb=self.kb,
-                    ablation=self.config.ablation,
-                )
-                used += 1
-                envelope = outcome.envelope
-                record = {"name": call.name, "arguments": call.arguments, "result": envelope}
-                add_message(
-                    self.conn,
-                    self.conversation_id,
-                    "tool",
-                    json.dumps(record, ensure_ascii=False, default=str),
-                    self.now,
-                )
-                messages.append(
-                    {
-                        "role": "assistant",
-                        "content": "",
-                        "tool_calls": [
-                            {"function": {"name": call.name, "arguments": call.arguments}}
-                        ],
-                    }
-                )
-                messages.append(
-                    {
-                        "role": "tool",
-                        "tool_name": call.name,
-                        "content": data_block(envelope, marking),
-                    }
-                )
-                refusals = 0 if outcome.decision is GateDecision.ALLOWED else refusals + 1
-                if refusals >= self.config.max_refusals:
-                    return self.escalate(
-                        EscalationReason.REPEATED_GATE_BLOCKS, "handoff", HANDOFF_COPY
-                    )
-                data = envelope.get("data") or {}
-                if envelope["ok"] and call.name == ToolName.HANDOFF_TO_STAFF:
-                    self.reply("handoff", HANDOFF_COPY)
-                    return self.finish()
-                if data.get("escalate") == EscalationReason.VERIFICATION_FAILED:
-                    return self.escalate(EscalationReason.VERIFICATION_FAILED, "handoff", LIMIT_SAY)
-                if envelope["ok"] and data.get("card") == "shown":
-                    card_actions.append(data["action_id"])
-
-        final_kind = self.checked_reply(turn.text, messages, state)
-        if final_kind == "fallback":
+        self.used = self.refusals = 0
+        self.card_actions: list[str] = []
+        draft = self.tool_loop(messages)
+        if draft is None:
             return self.finish()
-        for action_id in reversed(card_actions):
-            card = _card(self.conn, action_id)
-            if card is not None:
-                self.result.card = card
-                break
+        if self.checked_reply(draft, messages, state) == "text":
+            for action_id in reversed(self.card_actions):
+                card = _card(self.conn, action_id)
+                if card is not None:
+                    self.result.card = card
+                    break
         return self.finish()
 
+    def tool_loop(self, messages: list[Message]) -> str | None:
+        """Call the model and run its tool calls until it answers in text. None when the turn
+        already ended (a handoff or an escalation wrote the reply)."""
+        while True:
+            tools = self.tools_now() if self.used < self.config.max_tool_calls else []
+            turn = self.model(messages, tools)
+            if turn is None:
+                self.escalate(EscalationReason.MODEL_UNAVAILABLE, "fallback", FALLBACK)
+                return None
+            if not (turn.tool_calls and tools):
+                return turn.text
+            for call in turn.tool_calls:
+                if self.used >= self.config.max_tool_calls:
+                    break
+                if not self.run_call(call.name, call.arguments, messages):
+                    return None
+
+    def run_call(self, name: str, arguments: Any, messages: list[Message]) -> bool:
+        """Run one tool call; False when it ended the turn."""
+        outcome = run_tool_call(
+            self.conn,
+            conversation_id=self.conversation_id,
+            turn=self.turn_number,
+            tool_name=name,
+            raw_args=arguments,
+            now=self.now,
+            kb=self.kb,
+            ablation=self.config.ablation,
+        )
+        self.used += 1
+        envelope = outcome.envelope
+        record = {"name": name, "arguments": arguments, "result": envelope}
+        add_message(
+            self.conn,
+            self.conversation_id,
+            "tool",
+            json.dumps(record, ensure_ascii=False, default=str),
+            self.now,
+        )
+        messages.append(
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [{"function": {"name": name, "arguments": arguments}}],
+            }
+        )
+        messages.append(
+            {"role": "tool", "tool_name": name, "content": data_block(envelope, self.marking)}
+        )
+        self.refusals = 0 if outcome.decision is GateDecision.ALLOWED else self.refusals + 1
+        if self.refusals >= self.config.max_refusals:
+            self.escalate(EscalationReason.REPEATED_GATE_BLOCKS, "handoff", HANDOFF_COPY)
+            return False
+        data = envelope.get("data") or {}
+        if envelope["ok"] and name == ToolName.HANDOFF_TO_STAFF:
+            self.reply("handoff", HANDOFF_COPY)
+            return False
+        if data.get("escalate") == EscalationReason.VERIFICATION_FAILED:
+            self.escalate(EscalationReason.VERIFICATION_FAILED, "handoff", LIMIT_SAY)
+            return False
+        if envelope["ok"] and data.get("card") == "shown":
+            self.card_actions.append(data["action_id"])
+        return True
+
     def checked_reply(self, draft: str, messages: list[Message], state: str) -> str:
+        """Check the draft. On failure the model writes it again once, and may use tools within
+        the turn's remaining budget (for example to create the card it talked about)."""
+        draft = plain_text(draft)
         if self.config.ablation in {Ablation.NO_REPLY_CHECKS, Ablation.BASELINE}:
             self.reply("text", draft)
             return "text"
-        allowed = build_allowed(
-            self.conn, self.conversation_id, self.settings, price_book(), state, safety()
-        )
-        attempts = [check_reply(draft, allowed)]
+        attempts = [check_reply(draft, self.allowed(state))]
         final, kind = draft, "text"
         if not draft.strip() or not all(r.passed for r in attempts[0]):
-            retry = [
-                *messages,
-                {"role": "assistant", "content": draft},
+            messages.append({"role": "assistant", "content": draft})
+            messages.append(
                 {
                     "role": "system",
                     "content": feedback(attempts[0]) if draft.strip() else EMPTY_DRAFT,
-                },
-            ]
-            second = self.model(retry, [])
-            second_text = second.text if second else ""
-            attempts.append(check_reply(second_text, allowed))
+                }
+            )
+            second = self.tool_loop(messages)
+            if second is None:
+                return "ended"
+            second_text = plain_text(second)
+            attempts.append(check_reply(second_text, self.allowed(state)))
             if second_text.strip() and all(r.passed for r in attempts[1]):
                 final = second_text
             else:
@@ -499,6 +549,11 @@ class _Turn:
                 passed=kind == "text",
             )
         return kind
+
+    def allowed(self, state: str) -> Allowed:
+        return build_allowed(
+            self.conn, self.conversation_id, self.settings, price_book(), state, safety()
+        )
 
     def escalate_with_id(self, reason: EscalationReason) -> str:
         create_handoff(

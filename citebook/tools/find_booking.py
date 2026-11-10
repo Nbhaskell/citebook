@@ -17,9 +17,14 @@ def handle(ctx: ToolContext, _args: NoArgs) -> ToolOutput:
         (booking["service_code"], booking["quote_id"]),
     ).fetchone()
     first = ctx.conn.execute("SELECT * FROM slots WHERE id = ?", (booking["slot_id"],)).fetchone()
+    zip_code = ctx.conn.execute(
+        "SELECT zip_code FROM customers WHERE id = ?", (booking["customer_id"],)
+    ).fetchone()["zip_code"]
     data: dict[str, object] = {
         "booking_reference": booking["reference"],
         "service": row["name"],
+        "service_code": booking["service_code"],
+        "zip_code": zip_code,
         "when": arrival(ctx.rules.clock, first),
         "status": booking["status"],
         "total": format_money(row["total_minor"]),

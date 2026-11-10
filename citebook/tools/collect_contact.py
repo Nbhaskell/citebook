@@ -14,7 +14,7 @@ from pydantic import Field, field_validator
 from citebook.models import ToolKind, ToolName
 from citebook.timeutil import to_utc_text
 from citebook.tools.base import Block, ToolArgs, ToolContext, ToolOutput, ToolSpec, blocked
-from citebook.tools.common import SAY_OUT_OF_AREA
+from citebook.tools.common import SAY_OUT_OF_AREA, zip_problem
 
 EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -53,6 +53,10 @@ class Args(ToolArgs):
         if not re.search(r"[^\W\d_]", value):
             raise ValueError("a name has letters")
         return value
+
+
+def check_ids(ctx: ToolContext, args: Args) -> Block | None:
+    return zip_problem(ctx, args.zip_code)
 
 
 def check_policy(ctx: ToolContext, args: Args) -> Block | None:
@@ -107,5 +111,6 @@ SPEC = ToolSpec(
     ),
     handler=handle,
     rate_limit=5,
+    check_ids=check_ids,
     check_policy=check_policy,
 )

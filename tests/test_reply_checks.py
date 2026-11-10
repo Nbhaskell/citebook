@@ -195,14 +195,16 @@ def test_false_confirmations_fail(allowed: Allowed, reply: str) -> None:
 @pytest.mark.parametrize(
     "reply",
     [
-        "Your booking is held until our team confirms it.",
+        "It will be held until our team confirms it.",
         "Nothing is booked until you press Confirm on the card.",
+        "Is that time confirmed for you?",
         "Once you press Confirm, the booking will be held.",
         "It is not confirmed yet.",
         "Please press Confirm on the card to request the move.",
     ],
 )
 def test_held_and_conditional_wording_passes(allowed: Allowed, reply: str) -> None:
+    allowed.open_card = True  # these sentences are said while a card waits
     assert C.NO_FALSE_CONFIRMATION not in failed(reply, allowed)
 
 
@@ -293,3 +295,51 @@ def test_a_verified_customer_may_hear_their_own_details(db: sqlite3.Connection) 
     allowed = build_allowed(db, conversation, load_settings(db), price_book(), "", SAFETY)
     reply = "Sam Okafor, your booking CB-7KQ4MX is confirmed for Tuesday 17 November."
     assert failed(reply, allowed) == set()
+
+
+# --- held, sent and card claims (from the first smoke test) -----------------------------------
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        "The booking is now held, and our team will confirm it.",
+        "Your booking is held until our team confirms it.",
+        "The booking is now held until our team confirms it, usually within 2 business hours.",
+        "The booking has been marked as confirmed.",
+        "The customer has pressed Confirm on the card.",
+        "A refund request has been sent for your booking.",
+        "Your request has been submitted.",
+    ],
+)
+def test_held_or_sent_before_the_button_fails(allowed: Allowed, reply: str) -> None:
+    assert C.NO_FALSE_CONFIRMATION in failed(reply, allowed)
+
+
+def test_held_and_sent_are_true_after_confirm(allowed: Allowed) -> None:
+    allowed.done |= {"held", "sent"}
+    assert not failed("Your booking is now held. Your request has been sent.", allowed)
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        "Please press Confirm on the card below to hold the slot.",
+        "Check the card above.",
+        "Tap Confirm when you're ready.",
+    ],
+)
+def test_pointing_at_a_card_that_does_not_exist_fails(allowed: Allowed, reply: str) -> None:
+    assert C.NO_FALSE_CONFIRMATION in failed(reply, allowed)
+    allowed.open_card = True
+    assert C.NO_FALSE_CONFIRMATION not in failed(reply, allowed)
+
+
+def test_feedback_names_the_false_claim(allowed: Allowed) -> None:
+    text = feedback(check_reply("Your refund request has been sent to the team.", allowed))
+    assert "Nothing is sent to the team yet" in text
+
+
+def test_a_claim_with_several_words_between_is_found(allowed: Allowed) -> None:
+    reply = "I've marked your booking as confirmed. The technician will arrive at 1:00 PM."
+    assert C.NO_FALSE_CONFIRMATION in failed(reply, allowed)
