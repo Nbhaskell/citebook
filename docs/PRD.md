@@ -2,7 +2,7 @@
 
 Name: Citebook (repo `citebook`)
 
-Version 0.2 (2026-11-09: review decisions in `docs/DECISIONS.md`). Names of statuses, tools, decisions and check codes are defined in `BACKEND_SCHEMA.md`.
+Version 0.2. Names of statuses, tools, decisions and check codes are defined in `BACKEND_SCHEMA.md`.
 
 ## 1. Summary
 
@@ -162,6 +162,6 @@ Ollama with a tool-calling model (`qwen3:8b` first), rag-project for knowledge-b
 ## 14. Open questions
 
 1. Does `qwen3:8b` choose tools reliably enough, or does the turn loop need a "plan then call" step? Decide by measurement on dev scenarios.
-2. ~~Should `get_policy` call rag-project over HTTP or embed a small local index?~~ Decided 2026-11-09: call rag-project's retrieval-only `POST /api/search` (D-023 in `DECISIONS.md`), with `FakeKB` for tests.
+2. Resolved: `get_policy` calls rag-project's retrieval-only `POST /api/search`, with `FakeKB` for tests (`DECISIONS.md` D-019).
 3. Which reply checks produce false alarms on natural phrasing ("around 2", "a hundred bucks")? Measure on dev.
 4. Is a simulated-customer model worth the noise it adds to results? Keep it separate until shown useful.

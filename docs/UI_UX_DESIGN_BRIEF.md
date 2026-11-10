@@ -1,6 +1,6 @@
 # UI/UX Design Brief: Citebook
 
-Version 0.2 (2026-11-09: review decisions in `docs/DECISIONS.md`). Two surfaces: a customer chat widget on a demo website for the invented plumber, and a staff console. Use `frontend-design` and `ai-ui-patterns` when building. Names and codes from `BACKEND_SCHEMA.md`.
+Version 0.2. Two surfaces: a customer chat widget on a demo website for the invented plumber, and a staff console. Use `frontend-design` and `ai-ui-patterns` when building. Names and codes from `BACKEND_SCHEMA.md`.
 
 ## 1. Design goals
 

@@ -1,6 +1,6 @@
 # Implementation Plan: Citebook
 
-Version 0.2 (2026-11-09: review decisions in `docs/DECISIONS.md`). Phases end with an acceptance check; stop and review before the next. Names from `BACKEND_SCHEMA.md`, behavior from `TRD.md`. Windows 11 (PowerShell), local-first.
+Version 0.2. Phases end with an acceptance check; stop and review before the next. Names from `BACKEND_SCHEMA.md`, behavior from `TRD.md`. Windows 11 (PowerShell), local-first.
 
 Ground rules: tests first for plain code; `FakeProvider` and `FakeKB` so tests need no model, network or GPU; small commits; decisions in `docs/DECISIONS.md`; synthetic data only.
 
@@ -41,7 +41,7 @@ Acceptance: all transitions and pricing rules tested; double-booking test passes
 
 1. Tool registry: each tool's kind, requirements, Pydantic arguments, model-facing description.
 2. Gate with every check in `TRD.md` section 5, tested one by one, plus tests for malicious calls: other customer's reference, unknown tool, extra arguments, ids from another conversation, expired quote.
-3. `KnowledgeBase` interface, `RagProjectKB`, `FakeKB`; `get_policy` with relevance threshold. `RagProjectKB` needs rag-project's retrieval-only `POST /api/search` (TRD 6.1). That endpoint is a separate change in the rag-project repo and needs its own approval; until it exists, `get_policy` runs on `FakeKB` and the integration test is skipped.
+3. `KnowledgeBase` interface, `RagProjectKB`, `FakeKB`; `get_policy` with relevance threshold. `RagProjectKB` needs rag-project's retrieval-only `POST /api/search` (TRD 6.1). That endpoint is a separate change in the rag-project repo; until it exists, `get_policy` runs on `FakeKB` and the integration test is skipped.
 4. Outbox drafts from fixed templates.
 
 Acceptance: the full booking, reschedule, cancellation and refund flows run through tools and the gate in tests with no model.

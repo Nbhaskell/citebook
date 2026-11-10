@@ -1,6 +1,6 @@
 # Technical Requirements Document: Citebook
 
-Version 0.2 (2026-11-09: review decisions in `docs/DECISIONS.md`). Companion to `PRD.md`. Exact names come from `BACKEND_SCHEMA.md`.
+Version 0.2. Companion to `PRD.md`. Exact names come from `BACKEND_SCHEMA.md`.
 
 ## 1. Architecture
 
@@ -137,7 +137,7 @@ Notes on specific tools:
 
 ### 6.1 Knowledge base
 
-`RagProjectKB` calls rag-project's `POST /api/search`, a retrieval-only endpoint that returns passages with source, section, text and distance and makes no model call. That endpoint does not exist yet; it is a separate change in the rag-project repo, approved on its own. Until it lands, `get_policy` runs on `FakeKB` and the integration test is skipped. Calling `/api/ask` instead is rejected: it runs a full model answer (about 8 s, thinking on) on the same Ollama instance for every policy question.
+`RagProjectKB` calls rag-project's `POST /api/search`, a retrieval-only endpoint that returns passages with source, section, text and distance and makes no model call. The endpoint is a separate change in the rag-project repo. Until it exists, `get_policy` runs on `FakeKB` and the integration test is skipped. Calling `/api/ask` instead is rejected: it runs a full model answer (about 8 s, thinking on) on the same Ollama instance for every policy question.
 
 rag-project indexes one documents folder at a time. Citebook runs it with `RAG_DOCS_DIR` set to Citebook's knowledge-base folder and its own index folder, so Citebook and Citedesk cannot use it at the same moment. The knowledge-base folder holds `universe/docs` plus any Citebook policy text generated from settings (implementation plan Phase 1).
 

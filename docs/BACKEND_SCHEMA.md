@@ -1,6 +1,6 @@
 # Backend Schema: Citebook
 
-Version 0.2 (2026-11-09: aligned with `universe/facts.json` and the review decisions in `docs/DECISIONS.md`). **This file is the source of truth for names and values**: enums, statuses, tool names, gate decisions, check codes, table and column names. Other documents refer to these exact strings. If code and this file disagree, fix one of them on purpose and record why in `docs/DECISIONS.md`.
+Version 0.2. **This file is the source of truth for names and values**: enums, statuses, tool names, gate decisions, check codes, table and column names. Other documents refer to these exact strings. If code and this file disagree, fix one of them on purpose and record why in `docs/DECISIONS.md`.
 
 ## 1. Conventions
 

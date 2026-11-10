@@ -1,6 +1,6 @@
 # Application Flow: Citebook
 
-Version 0.2 (2026-11-09: review decisions in `docs/DECISIONS.md`). Statuses, tools and codes from `BACKEND_SCHEMA.md`; screens in `UI_UX_DESIGN_BRIEF.md`.
+Version 0.2. Statuses, tools and codes from `BACKEND_SCHEMA.md`; screens in `UI_UX_DESIGN_BRIEF.md`.
 
 ## 1. Actors
 
