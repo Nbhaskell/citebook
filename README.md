@@ -10,7 +10,12 @@ Citebook is a website chatbot for a small service business that acts, not only a
 
 ## Status
 
-Phase 0 (repository and tooling) of `docs/IMPLEMENTATION_PLAN.md` is complete: settings, a `/api/status` route, a placeholder widget and staff console that show the status, an environment check, commit guards and CI. Nothing that books, quotes or chats exists yet.
+Phases 0 and 1 of `docs/IMPLEMENTATION_PLAN.md` are complete:
+
+- Phase 0: settings, a `/api/status` route, a placeholder widget and staff console that show the status, an environment check, commit guards and CI.
+- Phase 1: the invented business copied from Citedesk's `universe/`, Citebook's extension (services, technicians, ZIP codes, customers, bookings), generated seed files and knowledge-base documents, and a deterministic four-week calendar seed (`python -m tools.seed_calendar --state base_week_1`).
+
+Nothing that books, quotes or chats exists yet.
 
 ## Run it (Windows, PowerShell)
 
