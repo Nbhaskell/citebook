@@ -216,3 +216,21 @@ def format_window(start: datetime, end: datetime) -> str:
     else:
         times = f"{begin[0]} {begin[1]}{EN_DASH}{finish} {finish_half}"
     return f"{start:%A} {start.day} {start:%B}, {times}"
+
+
+def format_arrival(start: datetime, end: datetime) -> str:
+    """'Thursday 12 November, arrival 1:00-3:00 PM' (with an en dash), as on cards and drafts."""
+    day, times = format_window(start, end).split(", ", 1)
+    return f"{day}, arrival {times}"
+
+
+def format_slot_short(start: datetime, end: datetime) -> str:
+    """'Thu 12 Nov, arrival 1:00-3:00 PM' (with an en dash), as in availability results."""
+    times = format_window(start, end).split(", ", 1)[1]
+    return f"{start:%a} {start.day} {start:%b}, arrival {times}"
+
+
+def format_clock(moment: datetime) -> str:
+    """'5:40 PM'."""
+    digits, half = _clock(moment)
+    return f"{digits} {half}"

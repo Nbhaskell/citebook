@@ -32,7 +32,8 @@ from citebook.models import (
     SlotStatus,
     StaffDecision,
 )
-from citebook.timeutil import BusinessClock, format_window, is_late, parse_utc, to_utc_text
+from citebook.outbox import REQUEST_LABELS, draft
+from citebook.timeutil import BusinessClock, is_late, parse_utc, to_utc_text
 
 S = ActionStatus
 ACTION_TRANSITIONS: dict[ActionStatus | None, set[ActionStatus]] = {
@@ -73,6 +74,7 @@ class Rules:
     clock: BusinessClock
     free_cancel_hours: int
     hold_ttl_business_hours: int
+    staff_confirm_typical_business_hours: int = 2
 
     @classmethod
     def from_settings(cls, settings: dict[str, Any]) -> Rules:
@@ -80,6 +82,7 @@ class Rules:
             clock=BusinessClock.from_settings(settings),
             free_cancel_hours=settings["free_cancel_hours"],
             hold_ttl_business_hours=settings["hold_ttl_business_hours"],
+            staff_confirm_typical_business_hours=settings["staff_confirm_typical_business_hours"],
         )
 
 
@@ -172,15 +175,6 @@ def visit_slot_ids(conn: sqlite3.Connection, first_slot_id: str, windows_needed:
             raise SlotTaken(first_slot_id)
         ids.append(row["id"])
     return ids
-
-
-def _outbox(
-    conn: sqlite3.Connection, booking_id: str | None, kind: OutboxKind, body: str, now: datetime
-) -> None:
-    conn.execute(
-        "INSERT INTO outbox (id, booking_id, kind, body, created_at) VALUES (?, ?, ?, ?, ?)",
-        (str(uuid.uuid4()), booking_id, kind.value, body, to_utc_text(now)),
-    )
 
 
 def _set_conversation(
@@ -410,6 +404,7 @@ def _visit_start(conn: sqlite3.Connection, booking_id: str) -> datetime:
 
 def _to_staff(
     conn: sqlite3.Connection,
+    rules: Rules,
     row: sqlite3.Row,
     current: ActionStatus,
     reason: EscalationReason,
@@ -418,12 +413,17 @@ def _to_staff(
     set_action_status(
         conn, row["id"], current, S.PENDING_STAFF, now, escalation_reason=reason.value
     )
-    _outbox(
+    customer = conn.execute(
+        "SELECT customer_id FROM conversations WHERE id = ?", (row["conversation_id"],)
+    ).fetchone()["customer_id"]
+    draft(
         conn,
-        row["booking_id"],
+        rules.clock,
         OutboxKind.REQUEST_RECEIVED,
-        "Your request has reached our team. A team member will review it and reply.",
         now,
+        booking_id=row["booking_id"],
+        customer_id=customer,
+        request=REQUEST_LABELS[ActionType(row["action_type"])],
     )
     return ConfirmResult(S.PENDING_STAFF.value, row["id"])
 
@@ -437,21 +437,27 @@ def _route(
     if kind is ActionType.HOLD_CREATE:
         return _attempt(conn, row, confirmed, now, lambda: _execute_hold(conn, rules, row, now))
     if kind is ActionType.REFUND_REQUEST:
-        return _to_staff(conn, row, confirmed, EscalationReason.REFUND, now)
+        return _to_staff(conn, rules, row, confirmed, EscalationReason.REFUND, now)
     if kind is ActionType.POLICY_EXCEPTION:
-        return _to_staff(conn, row, confirmed, EscalationReason.POLICY_EXCEPTION, now)
+        return _to_staff(conn, rules, row, confirmed, EscalationReason.POLICY_EXCEPTION, now)
     booking = conn.execute("SELECT * FROM bookings WHERE id = ?", (row["booking_id"],)).fetchone()
     late = is_late(now, _visit_start(conn, booking["id"]), rules.free_cancel_hours)
     if kind is ActionType.RESCHEDULE:
         if late:
-            return _to_staff(conn, row, confirmed, EscalationReason.LATE_RESCHEDULE, now)
+            return _to_staff(conn, rules, row, confirmed, EscalationReason.LATE_RESCHEDULE, now)
         return _attempt(
-            conn, row, confirmed, now, lambda: _execute_reschedule(conn, booking, payload, now)
+            conn,
+            row,
+            confirmed,
+            now,
+            lambda: _execute_reschedule(conn, rules, booking, payload, now),
         )
     if kind is ActionType.CANCELLATION:
         if late and booking["status"] != BookingStatus.HELD:
-            return _to_staff(conn, row, confirmed, EscalationReason.LATE_CANCELLATION, now)
-        return _attempt(conn, row, confirmed, now, lambda: _execute_cancel(conn, booking, now))
+            return _to_staff(conn, rules, row, confirmed, EscalationReason.LATE_CANCELLATION, now)
+        return _attempt(
+            conn, row, confirmed, now, lambda: _execute_cancel(conn, rules, booking, now)
+        )
     raise ValueError(f"no routing for {kind}")
 
 
@@ -488,18 +494,6 @@ def _service(conn: sqlite3.Connection, code: str) -> sqlite3.Row:
     return row
 
 
-def _describe(conn: sqlite3.Connection, rules: Rules, booking_id: str) -> str:
-    row = conn.execute(
-        "SELECT b.reference, v.name, s.starts_at, s.ends_at, v.windows_needed FROM bookings b"
-        " JOIN services v ON v.code = b.service_code JOIN slots s ON s.id = b.slot_id"
-        " WHERE b.id = ?",
-        (booking_id,),
-    ).fetchone()
-    start = rules.clock.local(parse_utc(row["starts_at"]))
-    end = rules.clock.local(parse_utc(row["ends_at"]))
-    return f"{row['reference']}: {row['name']}, {format_window(start, end)}"
-
-
 def _execute_hold(
     conn: sqlite3.Connection, rules: Rules, row: sqlite3.Row, now: datetime
 ) -> ConfirmResult:
@@ -534,12 +528,13 @@ def _execute_hold(
     set_action_status(
         conn, row["id"], S.CUSTOMER_CONFIRMED, S.PENDING_STAFF, now, booking_id=booking_id
     )
-    _outbox(
+    draft(
         conn,
-        booking_id,
+        rules.clock,
         OutboxKind.HOLD_RECEIVED,
-        f"Held: {_describe(conn, rules, booking_id)}. Our team will confirm it.",
         now,
+        booking_id=booking_id,
+        typical_hours=str(rules.staff_confirm_typical_business_hours),
     )
     audit(
         conn,
@@ -553,7 +548,11 @@ def _execute_hold(
 
 
 def _execute_reschedule(
-    conn: sqlite3.Connection, booking: sqlite3.Row, payload: dict[str, Any], now: datetime
+    conn: sqlite3.Connection,
+    rules: Rules,
+    booking: sqlite3.Row,
+    payload: dict[str, Any],
+    now: datetime,
 ) -> ConfirmResult:
     windows = _service(conn, booking["service_code"])["windows_needed"]
     old = visit_slot_ids(conn, booking["slot_id"], windows)
@@ -567,19 +566,21 @@ def _execute_reschedule(
         " updated_at = ? WHERE id = ?",
         (payload["new_slot_ids"][0], payload["quote_id"], to_utc_text(now), booking["id"]),
     )
-    return _executed(conn, booking["id"], OutboxKind.BOOKING_RESCHEDULED, now)
+    return _executed(conn, rules, booking["id"], OutboxKind.BOOKING_RESCHEDULED, now)
 
 
-def _execute_cancel(conn: sqlite3.Connection, booking: sqlite3.Row, now: datetime) -> ConfirmResult:
+def _execute_cancel(
+    conn: sqlite3.Connection, rules: Rules, booking: sqlite3.Row, now: datetime
+) -> ConfirmResult:
     windows = _service(conn, booking["service_code"])["windows_needed"]
     for slot_id in visit_slot_ids(conn, booking["slot_id"], windows):
         _move_slot(conn, slot_id, SlotStatus.OPEN)
     _move_booking(conn, booking["id"], BookingStatus.CANCELLED, now)
-    return _executed(conn, booking["id"], OutboxKind.BOOKING_CANCELLED, now)
+    return _executed(conn, rules, booking["id"], OutboxKind.BOOKING_CANCELLED, now)
 
 
 def _executed(
-    conn: sqlite3.Connection, booking_id: str, kind: OutboxKind, now: datetime
+    conn: sqlite3.Connection, rules: Rules, booking_id: str, kind: OutboxKind, now: datetime
 ) -> ConfirmResult:
     """Finish the action that is executing for this booking and draft the notification."""
     row = conn.execute(
@@ -593,12 +594,7 @@ def _executed(
     reference = conn.execute(
         "SELECT reference FROM bookings WHERE id = ?", (booking_id,)
     ).fetchone()["reference"]
-    words = {
-        OutboxKind.BOOKING_RESCHEDULED: "moved",
-        OutboxKind.BOOKING_CANCELLED: "cancelled",
-        OutboxKind.BOOKING_CONFIRMED: "confirmed",
-    }[kind]
-    _outbox(conn, booking_id, kind, f"Booking {reference} is {words}.", now)
+    draft(conn, rules.clock, kind, now, booking_id=booking_id)
     audit(
         conn,
         Actor.SYSTEM,
@@ -663,6 +659,7 @@ def decide(
                     BookingStatus.CANCELLED,
                     OutboxKind.HOLD_DECLINED,
                     now,
+                    reason=reason or "",
                 )
             return ConfirmResult(S.REJECTED.value, action_id)
 
@@ -682,9 +679,15 @@ def decide(
         if kind is ActionType.RESCHEDULE:
             payload = json.loads(row["payload"])
             return _attempt(
-                conn, row, S.APPROVED, now, lambda: _execute_reschedule(conn, booking, payload, now)
+                conn,
+                row,
+                S.APPROVED,
+                now,
+                lambda: _execute_reschedule(conn, rules, booking, payload, now),
             )
-        return _attempt(conn, row, S.APPROVED, now, lambda: _execute_cancel(conn, booking, now))
+        return _attempt(
+            conn, row, S.APPROVED, now, lambda: _execute_cancel(conn, rules, booking, now)
+        )
 
 
 def _confirm_hold(
@@ -697,7 +700,7 @@ def _confirm_hold(
         _move_slot(conn, slot_id, SlotStatus.BOOKED)
     _move_booking(conn, booking["id"], BookingStatus.CONFIRMED, now)
     conn.execute("UPDATE bookings SET hold_expires_at = NULL WHERE id = ?", (booking["id"],))
-    return _executed(conn, booking["id"], OutboxKind.BOOKING_CONFIRMED, now)
+    return _executed(conn, rules, booking["id"], OutboxKind.BOOKING_CONFIRMED, now)
 
 
 def release_hold(
@@ -707,15 +710,16 @@ def release_hold(
     target: BookingStatus,
     kind: OutboxKind,
     now: datetime,
+    reason: str = "",
 ) -> None:
     booking = conn.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,)).fetchone()
     windows = _service(conn, booking["service_code"])["windows_needed"]
-    description = _describe(conn, rules, booking_id)
+    # Drafted first: the template names the arrival window the hold had.
+    extra = {"reason": reason} if kind is OutboxKind.HOLD_DECLINED else {}
+    draft(conn, rules.clock, kind, now, booking_id=booking_id, **extra)
     for slot_id in visit_slot_ids(conn, booking["slot_id"], windows):
         _move_slot(conn, slot_id, SlotStatus.OPEN)
     _move_booking(conn, booking_id, target, now)
-    word = "was not confirmed" if kind is OutboxKind.HOLD_DECLINED else "expired"
-    _outbox(conn, booking_id, kind, f"Hold {word}: {description}.", now)
 
 
 def take_over(conn: sqlite3.Connection, conversation_id: str, now: datetime) -> None:
