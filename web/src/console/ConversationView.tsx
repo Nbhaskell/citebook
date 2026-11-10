@@ -263,7 +263,9 @@ function DecisionForm({
         )}
       </ul>
       {isRefund && <p className="note">Approving records your decision. Citebook does not move money.</p>}
-      {!rejecting ? (
+      {action.action_type === "handoff" ? (
+        <p className="note">Take over to reply to the customer here, or close the conversation.</p>
+      ) : !rejecting ? (
         <div className="button-row">
           <button type="button" className="primary" disabled={busy} onClick={() => void decide("approve")}>
             Approve {label.word.toLowerCase()}
@@ -359,6 +361,7 @@ function DecisionPanel({ detail, reload }: { detail: ConversationDetail; reload:
   const [openedAt] = useState(() => Date.now());
   const pending = detail.actions.filter((action) => action.status === "pending_staff");
   const earlier = detail.actions.filter((action) => action.status !== "pending_staff");
+  const handoffOpen = pending.some((action) => action.action_type === "handoff");
   const ended = detail.status === "closed" || detail.status === "abandoned";
 
   async function conversationStep(step: () => Promise<unknown>, done: string) {
@@ -406,7 +409,7 @@ function DecisionPanel({ detail, reload }: { detail: ConversationDetail; reload:
       )}
       <h3>Conversation</h3>
       <div className="button-row">
-        {!ended && detail.status !== "handed_off" && (
+        {!ended && (detail.status !== "handed_off" || handoffOpen) && (
           <button
             type="button"
             onClick={() =>

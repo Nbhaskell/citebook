@@ -10,7 +10,7 @@ Citebook is a website chatbot for a small service business that acts, not only a
 
 ## Status
 
-Phases 0 to 4 of `docs/IMPLEMENTATION_PLAN.md` are complete:
+Phases 0 to 5 of `docs/IMPLEMENTATION_PLAN.md` are complete:
 
 - Phase 0: settings, a `/api/status` route, a placeholder widget and staff console that show the status, an environment check, commit guards and CI.
 - Phase 1: the invented business copied from Citedesk's `universe/`, Citebook's extension (services, technicians, ZIP codes, customers, bookings), generated seed files and knowledge-base documents, and a deterministic four-week calendar seed (`python -m tools.seed_calendar --state base_week_1`).
@@ -18,7 +18,9 @@ Phases 0 to 4 of `docs/IMPLEMENTATION_PLAN.md` are complete:
 - Phase 3: the thirteen tools with Pydantic argument models, the policy gate with its eight checks in order (identity from the conversation, ownership checked in the gate and again in SQL), the knowledge-base interface with a fake for tests, notification drafts from fixed templates, and tests that run the booking, reschedule, cancellation and refund flows through the tools and the gate with no model.
 - Phase 4: the model provider for a local Ollama model (with a scripted fake for tests), a versioned system prompt, the turn loop with tool limits and fallbacks, reply checks that block invented prices, times, references and false confirmations, the customer API with session tokens and a Confirm button bound to the card's hash, and a smoke test of ten conversations against the local model.
 
-The widget and the staff console are still the Phase 0 placeholders; the real ones come in Phase 5. Until then the API can be driven directly. rag-project's retrieval-only `POST /api/search` endpoint does not exist yet, so policy questions use the fake knowledge base.
+- Phase 5: the staff API (queue, conversation detail, decisions, take-over, calendar, outbox) and status checks; the chat widget on a demo plumber website (slot chips, price table, confirmation cards that become receipts, emergency block, handoff to a person); and the staff console (queue, conversation detail with an activity timeline of gate decisions and reply checks, decision panel, calendar, outbox of unsent drafts, status). Both work by keyboard alone and at 360 px wide.
+
+Policy questions use the fake knowledge base by default (`CITEBOOK_KB=fake`); rag-project's `POST /api/search` is used from Phase 6. Model behaviour is measured with scenarios in Phase 6.
 
 ## Run it (Windows, PowerShell)
 
@@ -32,7 +34,9 @@ Copy-Item .env.example .env
 .\.venv\Scripts\python.exe -m citebook
 ```
 
-In a second terminal, start the web app and open `http://127.0.0.1:5176/widget/` or `http://127.0.0.1:5176/console/`:
+Seed the demo database first: `.\.venv\Scripts\python.exe -m tools.seed_db --fresh`. The seeded calendar covers the week from Monday 9 November 2026; set `CITEBOOK_DEMO_START=2026-11-09T07:00:00-08:00` in `.env` to start the API's clock there (D-066).
+
+In a second terminal, start the web app and open `http://127.0.0.1:5176/` (the demo plumber website with the chat widget) or `http://127.0.0.1:5176/console/` (the staff console):
 
 ```powershell
 npm --prefix web run dev

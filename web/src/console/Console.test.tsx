@@ -155,6 +155,26 @@ describe("console", () => {
     expect(decide?.body).toMatchObject({ decision: "reject", reason: "Needs a site visit first" });
   });
 
+  it("offers take-over, not approve or reject, for a handoff", async () => {
+    const handoff = {
+      ...DETAIL.actions[0],
+      action_id: "act-h",
+      action_type: "handoff",
+      reason: "CUSTOMER_ASKED_FOR_PERSON",
+      summary: "Conversation handed to the team",
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ ...DETAIL, status: "handed_off", actions: [handoff] })),
+    );
+    window.location.hash = "#/conversation/conv-1";
+    render(<ConsoleApp />);
+    expect(await screen.findByRole("button", { name: "Take over" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Approve/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Reject…" })).toBeNull();
+    expect(screen.getByText(/Customer asked for a person/)).toBeInTheDocument();
+  });
+
   it("approves a hold and says that the notification is only a draft", async () => {
     window.location.hash = "#/conversation/conv-1";
     render(<ConsoleApp />);

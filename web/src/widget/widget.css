@@ -3,7 +3,8 @@
 .widget-page {
   max-width: 40rem;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--paper);
@@ -11,6 +12,8 @@
 
 .widget-page .chat {
   flex: 1;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
 }
 
 .chat {

@@ -92,7 +92,10 @@ export function QueueView({ tab, now }: { tab: keyof Queue; now: () => Date }) {
             <tbody>
               {rows.map((item) => {
                 const type = ACTION_LABELS[item.action_type] ?? { word: item.action_type, icon: "question" };
-                const status = STATUS_LABELS[item.status] ?? { word: item.status, icon: "question", tone: "neutral" };
+                const status =
+                  item.action_type === "handoff" && item.status === "pending_staff"
+                    ? ({ word: "Waiting for staff", icon: "person", tone: "warn" } as const)
+                    : (STATUS_LABELS[item.status] ?? { word: item.status, icon: "question", tone: "neutral" });
                 return (
                   <tr key={item.action_id}>
                     <td data-label="Type">
