@@ -18,6 +18,11 @@ from citebook.db import utc_now
 from citebook.models import Actor
 
 _SAFE_TEXT = re.compile(r"^[A-Za-z0-9_.:\-]{1,64}$")
+# Values made only of safe characters that still identify a customer: a phone number such as
+# 555-0142 and a booking reference such as CB-7KQ4MX. Events use row ids instead.
+_PERSONAL = re.compile(
+    r"^(?:\+?1[-.])?(?:\d{3}[-.])?\d{3}[-.]\d{4}$|^\d{7,11}$|^CB-[A-Z0-9]{6}$", re.IGNORECASE
+)
 logger = logging.getLogger("citebook")
 
 Value = str | int | float | bool | None
@@ -29,7 +34,7 @@ def check_fields(fields: dict[str, Value]) -> dict[str, Value]:
             raise ValueError(f"unsafe event field name {key!r}")
         if value is None or isinstance(value, bool | int | float):
             continue
-        if isinstance(value, str) and _SAFE_TEXT.match(value):
+        if isinstance(value, str) and _SAFE_TEXT.match(value) and not _PERSONAL.search(value):
             continue
         raise ValueError(f"event field {key!r} holds text that is not an id or a code")
     return fields
