@@ -10,6 +10,7 @@ from citebook.db import (
     MigrationError,
     applied_versions,
     connect,
+    discover,
     migrate,
     transaction,
     utc_now,
@@ -50,7 +51,7 @@ def test_migration_holds_exactly_the_tables_in_the_schema_document() -> None:
 
 
 def test_all_migrations_apply_and_are_recorded(conn: sqlite3.Connection) -> None:
-    assert applied_versions(conn) == [1]
+    assert applied_versions(conn) == sorted(discover(MIGRATIONS_DIR))
     names = {r["name"] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert {"conversations", "bookings", "slots", "actions", "outbox", "audit_events"} <= names
 
@@ -145,6 +146,7 @@ def test_gaps_in_the_numbering_are_refused(tmp_path: Path) -> None:
 def test_a_database_newer_than_the_code_is_refused(
     conn: sqlite3.Connection, tmp_path: Path
 ) -> None:
-    conn.execute("INSERT INTO schema_migrations VALUES (2, 'future', 'x')")
+    future = max(discover(MIGRATIONS_DIR)) + 1
+    conn.execute("INSERT INTO schema_migrations VALUES (?, 'future', 'x')", (future,))
     with pytest.raises(MigrationError, match="newer than the code"):
         migrate(conn)
