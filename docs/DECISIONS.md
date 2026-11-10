@@ -156,3 +156,9 @@ Every booking needs a `quote_id`, and seeded bookings were never quoted in a cha
 
 ### D-043. Enums live in `citebook/models.py`
 Each enum in schema section 2 is a `StrEnum` in `citebook/models.py` (except `service_code`, which is data). A test compares the code enums with the schema document and with every `CHECK (... IN (...))` constraint in the migrations, and fails if a `CHECK` constraint has no enum. `audit_events.actor` is listed as the enum `actor`. The `ablation` setting now uses the shared enum.
+
+### D-044. How date phrases resolve
+`citebook/timeutil.py` resolves the phrases a customer uses, in the business time zone, so the model never does date maths. A weekday name means the next such day after today; today is "today". "Next Friday" means the Friday of the next Monday-to-Sunday week, so on Thursday 12 November "Friday" is 13 November and "next Friday" is 20 November. "This Monday" after Monday has passed is unresolved, and the assistant asks which Monday. The card always shows the exact date, so the customer sees which day was chosen. Elapsed-time rules, such as 24 hours' notice, are computed in UTC, because Python subtracts two times in the same zone as wall-clock times and would be one hour wrong on a daylight-saving weekend; a test covers that weekend.
+
+### D-045. Money helpers
+Amounts are integer cents. Rates and dollar amounts are `Decimal`; a float, string or `bool` is refused with `TypeError`. Rounding is half up, away from zero (`$0.025` becomes 3 cents, not the 2 cents that banker's rounding gives). Display is `$1,450.00`, and a credit line is `-$89.00`.
