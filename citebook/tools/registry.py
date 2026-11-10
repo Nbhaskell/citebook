@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from citebook.models import ConversationStatus, ToolKind, ToolName
+from citebook.models import ConversationStatus
 from citebook.tools import (
     check_availability,
     collect_contact,
@@ -47,15 +47,9 @@ REGISTRY: dict[str, ToolSpec] = {
 
 
 def allowed_in_state(spec: ToolSpec, status: ConversationStatus) -> bool:
-    """Schema section 2.2. While a card waits, read tools, a handoff and a new `propose` (which
-    withdraws the open card) are allowed; a `request` waits until the card is answered (D-056)."""
-    if status is ConversationStatus.ACTIVE:
-        return True
-    if status is ConversationStatus.AWAITING_CONFIRMATION:
-        return spec.kind in {ToolKind.READ, ToolKind.PROPOSE} or (
-            spec.name is ToolName.HANDOFF_TO_STAFF
-        )
-    return False
+    """Schema section 2.2. While a card waits, every tool is allowed: a new `propose` or
+    `request` withdraws the open card first, and the new card still needs Confirm (D-056)."""
+    return status in {ConversationStatus.ACTIVE, ConversationStatus.AWAITING_CONFIRMATION}
 
 
 def offered_tools(status: ConversationStatus) -> list[dict[str, Any]]:

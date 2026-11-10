@@ -33,10 +33,7 @@ from citebook.tools.registry import REGISTRY, allowed_in_state
 WEAKENED = {Ablation.BASELINE, Ablation.NO_GATE_POLICY}
 
 SAY_UNKNOWN_TOOL = "There is no tool with that name. Use only the tools you are offered."
-SAY_STATE = {
-    ConversationStatus.AWAITING_CONFIRMATION: (
-        "A confirmation card is waiting. Ask the customer to press Confirm or Cancel on it first."
-    ),
+SAY_STATE = {  # `active` and `awaiting_confirmation` allow every tool (D-056)
     ConversationStatus.HANDED_OFF: "A team member has this conversation. Do not call tools.",
     ConversationStatus.CLOSED: "This conversation has ended.",
     ConversationStatus.ABANDONED: "This conversation has ended.",

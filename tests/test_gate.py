@@ -92,11 +92,9 @@ def test_an_ended_conversation_runs_no_tools(db: sqlite3.Connection, status: str
     assert decision(call(db, conversation, "list_services")) == "NOT_ALLOWED_IN_STATE"
 
 
-def test_while_a_card_waits_requests_wait_but_reads_and_new_proposals_run(
-    db: sqlite3.Connection,
-) -> None:
+def test_while_a_card_waits_a_new_request_replaces_it(db: sqlite3.Connection) -> None:
     conversation = verified(db)
-    ok(
+    refund = ok(
         call(
             db,
             conversation,
@@ -104,11 +102,20 @@ def test_while_a_card_waits_requests_wait_but_reads_and_new_proposals_run(
             {"booking_reference": "CB-7KQ4MX", "reason_text": "x"},
         )
     )
-    refused = call(db, conversation, "request_cancellation", {"booking_reference": "CB-7KQ4MX"})
-    assert decision(refused) == "NOT_ALLOWED_IN_STATE"
-    assert "Confirm or Cancel" in refused["say"]
     ok(call(db, conversation, "find_booking"))
+    cancel = ok(call(db, conversation, "request_cancellation", {"booking_reference": "CB-7KQ4MX"}))
+    statuses = dict(
+        db.execute(
+            "SELECT id, status FROM actions WHERE conversation_id = ?", (conversation,)
+        ).fetchall()
+    )
+    assert statuses == {refund["action_id"]: "withdrawn", cancel["action_id"]: "proposed"}
+    assert booking(db, "CB-7KQ4MX")["status"] == "confirmed"  # still nothing without Confirm
     ok(call(db, conversation, "handoff_to_staff"))
+    assert (
+        db.execute("SELECT status FROM actions WHERE id = ?", (cancel["action_id"],)).fetchone()[0]
+        == "withdrawn"
+    )
 
 
 def test_the_state_check_comes_before_the_arguments(db: sqlite3.Connection) -> None:

@@ -75,12 +75,7 @@ def test_tools_allowed_per_status() -> None:
         return {n for n, spec in REGISTRY.items() if allowed_in_state(spec, status)}
 
     assert names(ConversationStatus.ACTIVE) == set(REGISTRY)
-    reads = {n for n, row in TABLE.items() if row[0] == "read"}
-    assert names(ConversationStatus.AWAITING_CONFIRMATION) == reads | {
-        "propose_hold",
-        "propose_reschedule",
-        "handoff_to_staff",
-    }
+    assert names(ConversationStatus.AWAITING_CONFIRMATION) == set(REGISTRY)
     for ended in ["handed_off", "closed", "abandoned"]:
         assert names(ConversationStatus(ended)) == set()
 

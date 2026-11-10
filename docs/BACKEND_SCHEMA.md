@@ -73,7 +73,7 @@ Kinds:
 | `conversation_status` | Allowed tools |
 |---|---|
 | `active` | all tools, subject to the requirements above |
-| `awaiting_confirmation` | `read` tools, `handoff_to_staff`; a new `propose` withdraws the pending one first |
+| `awaiting_confirmation` | all tools, subject to the requirements above; a new `propose` or `request` withdraws the pending one first |
 | `handed_off` | none; the assistant posts only a fixed holding message |
 | `closed`, `abandoned` | none |
 
