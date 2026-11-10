@@ -280,3 +280,10 @@ Result of the last run (prompt-v2): the hold, reschedule, free cancellation and 
 - `GET /api/conversations/{id}` is the customer's transcript: customer, assistant and staff messages and the open card, with no tool internals; it needs the session token.
 - `/api/status` now checks: the model server answers and has the model pulled, the knowledge base answers, and the database exists and is migrated. Each check has a short timeout. The response names the knowledge base in use (`kb`).
 - A task started with the app runs `expire_due` every 60 seconds (TRD section 7.1). The app's clock lives in `app.state.clock`, so tests and the scenario runner can fix the time.
+
+### D-065. Visual direction
+One direction for both surfaces (UI brief section 6), with the tokens in `web/src/shared/tokens.css`:
+
+- Widget and demo page: warm paper background (`#faf7f2`), near-black ink text, one deep teal action colour (`#0b5e5a`) for buttons and links. The confirmation card looks like a receipt, not a chat bubble: white, a perforated top edge, rows with aligned figures. Orange (`#b4410e`) is used only for emergencies. Assistant and customer messages are plain blocks with a role label, so actions never look like messages.
+- Console: calm and dense. Grey neutrals, tables, no decoration. Status is always a word, an icon and a colour, never colour alone.
+- System fonts only (no web fonts), inline SVG line icons, no emoji, no gradients, no sparkle icons. Focus ring orange-brown (`#b4530e`), 3 px, on every control.
