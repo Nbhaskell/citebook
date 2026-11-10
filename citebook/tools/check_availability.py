@@ -46,19 +46,22 @@ class Args(ToolArgs):
 
 
 def check_ids(ctx: ToolContext, args: Args) -> Block | None:
-    if service(ctx.conn, args.service_code) is None:
+    row = service(ctx.conn, args.service_code)
+    if row is None:
         return invalid(SAY_UNKNOWN_SERVICE, "unknown_service")
-    if block := zip_problem(ctx, args.zip_code):
+    # A service that cannot be booked online gets that answer whatever the ZIP code: asking the
+    # customer for a ZIP code first only delays the answer (D-070).
+    if row["bookable_online"] and (block := zip_problem(ctx, args.zip_code)):
         return block
     return None
 
 
 def check_policy(ctx: ToolContext, args: Args) -> Block | None:
-    if args.zip_code not in ctx.settings["zip_areas"]:
-        return blocked(SAY_OUT_OF_AREA, "out_of_area")
     row = service(ctx.conn, args.service_code)
     if row is not None and not row["bookable_online"]:
         return not_bookable(ctx, row)
+    if args.zip_code not in ctx.settings["zip_areas"]:
+        return blocked(SAY_OUT_OF_AREA, "out_of_area")
     return None
 
 

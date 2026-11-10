@@ -40,9 +40,12 @@ class Args(ToolArgs):
 
 
 def check_ids(ctx: ToolContext, args: Args) -> Block | None:
-    if service(ctx.conn, args.service_code) is None:
+    row = service(ctx.conn, args.service_code)
+    if row is None:
         return invalid(SAY_UNKNOWN_SERVICE, "unknown_service")
-    if block := zip_problem(ctx, args.zip_code):
+    # A quote-only job gets that answer whatever the ZIP code (D-070).
+    quote_only = row["pricing_kind"] == PricingKind.QUOTE_ONLY
+    if not quote_only and (block := zip_problem(ctx, args.zip_code)):
         return block
     if args.slot_id is not None and slot(ctx.conn, args.slot_id) is None:
         return invalid(SAY_UNKNOWN_SLOT, "unknown_slot")

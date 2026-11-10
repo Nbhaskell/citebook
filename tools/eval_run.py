@@ -135,7 +135,7 @@ def snapshot(path: Path, conversation_id: str | None) -> dict[str, Any]:
             (conversation_id,),
         ):
             checks = conn.execute(
-                "SELECT attempt, check_code, passed FROM reply_checks WHERE message_id = ?",
+                "SELECT attempt, check_code, passed, detail FROM reply_checks WHERE message_id = ?",
                 (row["id"],),
             ).fetchall()
             last = max((c["attempt"] for c in checks), default=0)
@@ -143,7 +143,23 @@ def snapshot(path: Path, conversation_id: str | None) -> dict[str, Any]:
                 c["check_code"] for c in checks if c["attempt"] == last and not c["passed"]
             )
             regenerated = last > 1
-            shown.append({"text": row["content"], "failed": failed, "regenerated": regenerated})
+            details = [
+                {
+                    "attempt": c["attempt"],
+                    "code": c["check_code"],
+                    "detail": json.loads(c["detail"]),
+                }
+                for c in checks
+                if not c["passed"]
+            ]
+            shown.append(
+                {
+                    "text": row["content"],
+                    "failed": failed,
+                    "regenerated": regenerated,
+                    "failed_details": details,
+                }
+            )
         conv = conn.execute(
             "SELECT status, verification_state FROM conversations WHERE id = ?", (conversation_id,)
         ).fetchone()

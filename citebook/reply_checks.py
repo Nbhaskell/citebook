@@ -43,6 +43,9 @@ class Allowed:
     done: set[str] = field(default_factory=set)  # held, sent, confirmed, cancelled, moved
     open_card: bool = False  # a card is waiting for the customer right now
     safety_texts: list[str] = field(default_factory=list)
+    # Texts the reply must not repeat: the system prompt and seeded booking notes (D-070).
+    instructions: str = ""
+    notes: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -212,14 +215,36 @@ _INSTRUCTION = re.compile(
 )
 
 
+PROMPT_ECHO_WORDS = 10
+NOTE_ECHO_WORDS = 5
+_WORD = re.compile(r"[a-z0-9']+")
+
+
+def _shingles(text: str, size: int) -> set[tuple[str, ...]]:
+    words = _WORD.findall(text.lower())
+    return {tuple(words[i : i + size]) for i in range(len(words) - size + 1)}
+
+
 def scope(reply: str, allowed: Allowed) -> CheckResult:
+    """Out of scope: gas or electrical instructions, and repeating the assistant's own
+    instructions or a booking's notes (untrusted text the customer must not see)."""
     risky = []
     for sentence in _sentences(reply):
         if any(sentence.rstrip(".") in text for text in allowed.safety_texts):
             continue
         if _RISKY_SUBJECT.search(sentence) and _INSTRUCTION.search(sentence):
             risky.append(sentence[:40])
-    return CheckResult(C.SCOPE, not risky, {"sentences": len(risky)})
+    echo = []
+    if allowed.instructions and _shingles(reply, PROMPT_ECHO_WORDS) & _shingles(
+        allowed.instructions, PROMPT_ECHO_WORDS
+    ):
+        echo.append("instructions")
+    if any(
+        _shingles(reply, NOTE_ECHO_WORDS) & _shingles(note, NOTE_ECHO_WORDS)
+        for note in allowed.notes
+    ):
+        echo.append("booking_notes")
+    return CheckResult(C.SCOPE, not risky and not echo, {"sentences": len(risky), "echo": echo})
 
 
 CHECKS = [
@@ -298,12 +323,17 @@ def build_allowed(
     state_text: str,
     safety: dict[str, Any],
 ) -> Allowed:
-    allowed = Allowed()
+    from citebook.prompts import system_prompt  # here: prompts imports the tool registry
+
+    allowed = Allowed(instructions=system_prompt())
     for row in conn.execute(
         "SELECT result FROM tool_calls WHERE conversation_id = ? AND result IS NOT NULL",
         (conversation_id,),
     ):
         _add_text(allowed, row["result"])
+        notes = json.loads(row["result"]).get("data", {})
+        if isinstance(notes, dict) and isinstance(notes.get("customer_notes"), str):
+            allowed.notes.append(notes["customer_notes"])
         if '"status": "confirmed"' in row["result"]:
             allowed.done.add("confirmed")
         if '"status": "cancelled"' in row["result"]:

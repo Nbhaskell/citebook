@@ -72,6 +72,23 @@ _NOT_JUST_YES = re.compile(
 )
 
 
+_PERSON = re.compile(
+    r"\b(?:talk|speak|chat)(?:ing)?\s+(?:to|with)\s+(?:a\s+|an\s+|the\s+|someone\s+(?:in|from)\s+"
+    r"(?:the\s+|your\s+)?)?(?:real\s+|actual\s+|live\s+)?(?:person|human|someone|somebody|staff|"
+    r"office|agent|representative|team\s+member|manager)\b"
+    r"|\b(?:connect|transfer|put)\s+me\s+(?:to|with|through\s+to)\s+(?:a\s+|an\s+|the\s+)?"
+    r"(?:real\s+)?(?:person|human|someone|staff|office|agent|team)\b"
+    r"|\breal\s+person\b|\bhuman\s+being\b",
+    re.IGNORECASE,
+)
+
+
+def is_person_request(text: str) -> bool:
+    """An explicit request to talk to a person. Code hands off at once: the model was seen to
+    promise a person without calling handoff_to_staff (D-070)."""
+    return bool(_PERSON.search(text))
+
+
 def is_typed_confirmation(text: str) -> bool:
     """A short "yes" or "confirm" typed while a card is open. Code answers it with fixed copy:
     typed words never confirm, and the model does not need to explain that (D-063)."""
@@ -395,6 +412,16 @@ class _Turn:
                 now=self.now,
             )
             self.reply("emergency", "\n".join(lines))
+            return self.finish()
+        if is_person_request(screened.text):
+            create_handoff(
+                self.conn,
+                conversation_id=self.conversation_id,
+                origin=ActionOrigin.LOOP,
+                reason=EscalationReason.CUSTOMER_ASKED_FOR_PERSON,
+                now=self.now,
+            )
+            self.reply("handoff", HANDOFF_COPY)
             return self.finish()
         open_card = self.conn.execute(
             "SELECT id FROM actions WHERE conversation_id = ? AND status = 'proposed'",

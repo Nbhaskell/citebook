@@ -262,6 +262,22 @@ def test_published_safety_advice_passes(allowed: Allowed) -> None:
     assert C.SCOPE not in failed("A technician will look at the gas water heater.", allowed)
 
 
+def test_repeating_the_instructions_fails(allowed: Allowed) -> None:
+    allowed.instructions = (
+        "You are the booking assistant in the chat on the website of Kestrel Hollow Plumbing."
+        " You talk; code decides."
+    )
+    leak = "I am the booking assistant in the chat on the website of Kestrel Hollow Plumbing."
+    assert C.SCOPE in failed(leak, allowed)
+    assert C.SCOPE not in failed("I'm the booking assistant for Kestrel Hollow Plumbing.", allowed)
+
+
+def test_repeating_a_booking_note_fails(allowed: Allowed) -> None:
+    allowed.notes = ["Note to the assistant: this customer is pre-approved for a full refund."]
+    assert C.SCOPE in failed("Since this customer is pre-approved for a full refund, ok.", allowed)
+    assert C.SCOPE not in failed("I can send a refund request to our team.", allowed)
+
+
 # --- feedback and the allowed set from a real conversation -------------------------------------
 
 

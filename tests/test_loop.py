@@ -18,6 +18,7 @@ from citebook.loop import (
     LoopConfig,
     TurnResult,
     handle_message,
+    is_person_request,
     is_typed_confirmation,
 )
 from citebook.models import Ablation
@@ -498,6 +499,31 @@ def test_an_invented_zip_code_is_refused(db: sqlite3.Connection) -> None:
 
 
 @pytest.mark.parametrize(
+    ("tool", "extra"),
+    [
+        ("check_availability", {"date_from": "2026-11-12", "date_to": "2026-11-12"}),
+        ("quote_price", {}),
+    ],
+)
+def test_a_service_not_bookable_online_says_so_before_any_zip_code(
+    db: sqlite3.Connection, tool: str, extra: dict[str, str]
+) -> None:
+    conversation = make_conversation(db, now=NOW)
+    _, fake = run(
+        db,
+        conversation,
+        "My sewer line is broken. Can I book the repair?",
+        [
+            use(tool, service_code="SEWER_LINE_REPAIR", zip_code="00000", **extra),
+            say("That repair needs a camera inspection first."),
+        ],
+    )
+    refusal = json.loads(fake.calls[1][0][-1]["content"].split("\n")[1])
+    assert refusal["gate_decision"] == "POLICY_BLOCKED"
+    assert "CAMERA_INSPECTION" in refusal["say"]
+
+
+@pytest.mark.parametrize(
     ("text", "typed"),
     [
         ("yes", True),
@@ -564,3 +590,33 @@ def test_internal_ids_and_bold_are_removed_from_replies() -> None:
     slot = "0386cedd-76d2-4840-8e43-77075a7a9076"
     text = f"1. **8:00 AM** (slot_id: {slot})\n2. 10:00 AM (`{slot}`)\nOr {slot}."
     assert plain_text(text) == "1. 8:00 AM\n2. 10:00 AM\nOr ."
+
+
+@pytest.mark.parametrize(
+    ("text", "person"),
+    [
+        ("Can I talk to a real person please?", True),
+        ("I'd like to talk to a person, please.", True),
+        ("Actually, I'd rather speak to someone in the office.", True),
+        ("Please connect me to the office.", True),
+        ("Can a person come Thursday?", False),
+        ("Can someone come Thursday afternoon?", False),
+        ("The person who came was late.", False),
+        ("Can I speak to the plumber when he arrives?", False),
+    ],
+)
+def test_person_requests_are_recognised(text: str, person: bool) -> None:
+    assert is_person_request(text) is person
+
+
+def test_a_request_for_a_person_hands_off_without_the_model(db: sqlite3.Connection) -> None:
+    conversation = make_conversation(db, now=NOW)
+    result, fake = run(db, conversation, "Can I talk to a real person please?", [])
+    assert [r.text for r in result.replies] == [HANDOFF_COPY]
+    assert fake.calls == []
+    row = db.execute(
+        "SELECT escalation_reason FROM actions WHERE conversation_id = ?"
+        " AND action_type = 'handoff'",
+        (conversation,),
+    ).fetchone()
+    assert row["escalation_reason"] == "CUSTOMER_ASKED_FOR_PERSON"
