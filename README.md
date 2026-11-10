@@ -10,14 +10,16 @@ Citebook is a website chatbot for a small service business that acts, not only a
 
 ## Status
 
-Phases 0 to 3 of `docs/IMPLEMENTATION_PLAN.md` are complete:
+Phases 0 to 4 of `docs/IMPLEMENTATION_PLAN.md` are complete:
 
 - Phase 0: settings, a `/api/status` route, a placeholder widget and staff console that show the status, an environment check, commit guards and CI.
 - Phase 1: the invented business copied from Citedesk's `universe/`, Citebook's extension (services, technicians, ZIP codes, customers, bookings), generated seed files and knowledge-base documents, and a deterministic four-week calendar seed (`python -m tools.seed_calendar --state base_week_1`).
 - Phase 2: the database (migrations kept equal to the schema document), enums kept in step with every `CHECK` constraint, money and business-time helpers, quote pricing, the action state machine with transactional execution and a double-booking test, expiry of cards, holds and idle conversations, customer verification, screening of customer messages, and a canary test that keeps message content out of logs and audit events.
 - Phase 3: the thirteen tools with Pydantic argument models, the policy gate with its eight checks in order (identity from the conversation, ownership checked in the gate and again in SQL), the knowledge-base interface with a fake for tests, notification drafts from fixed templates, and tests that run the booking, reschedule, cancellation and refund flows through the tools and the gate with no model.
 
-There is no chat yet: the model and the turn loop come in Phase 4. rag-project's retrieval-only `POST /api/search` endpoint does not exist yet, so policy questions use the fake knowledge base.
+- Phase 4: the model provider for a local Ollama model (with a scripted fake for tests), a versioned system prompt, the turn loop with tool limits and fallbacks, reply checks that block invented prices, times, references and false confirmations, the customer API with session tokens and a Confirm button bound to the card's hash, and a smoke test of ten conversations against the local model.
+
+There is no widget or staff console yet: they come in Phase 5. The API can be driven directly. rag-project's retrieval-only `POST /api/search` endpoint does not exist yet, so policy questions use the fake knowledge base.
 
 ## Run it (Windows, PowerShell)
 
