@@ -158,6 +158,7 @@ describe("chat widget", () => {
       fireEvent.click(chip);
     });
     expect(calls.at(-1)?.body).toEqual({ text: "Thu 12 Nov, arrival 1–3 PM" });
+    expect(screen.getByLabelText("Your message")).toHaveFocus();
   });
 
   it("says when the service cannot be reached and offers to try again", async () => {
