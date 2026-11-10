@@ -26,16 +26,17 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * Ablation
+         * @enum {string}
+         */
+        Ablation: "none" | "baseline" | "no_least_privilege" | "no_gate_policy" | "no_data_marking" | "no_reply_checks" | "no_screening";
+        /**
          * Status
          * @description What the service can say about itself. `None` means "not checked yet": the parts that
          *     would be checked (model, knowledge base, database) are built in later phases.
          */
         Status: {
-            /**
-             * Ablation
-             * @enum {string}
-             */
-            ablation: "none" | "baseline" | "no_least_privilege" | "no_gate_policy" | "no_data_marking" | "no_reply_checks" | "no_screening";
+            ablation: components["schemas"]["Ablation"];
             /** Database */
             database: string | null;
             /** Kb Reachable */

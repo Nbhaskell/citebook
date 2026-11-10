@@ -6,16 +6,7 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Values of the `ablation` enum in docs/BACKEND_SCHEMA.md section 2 (see TRD section 9).
-Ablation = Literal[
-    "none",
-    "baseline",
-    "no_least_privilege",
-    "no_gate_policy",
-    "no_data_marking",
-    "no_reply_checks",
-    "no_screening",
-]
+from citebook.models import Ablation
 
 
 class Settings(BaseSettings):
@@ -41,7 +32,7 @@ class Settings(BaseSettings):
     allow_hosted: bool = Field(default=False, validation_alias="CITEBOOK_ALLOW_HOSTED")
     synthetic_data: bool = Field(default=True, validation_alias="CITEBOOK_SYNTHETIC_DATA")
 
-    ablation: Ablation = Field(default="none", validation_alias="CITEBOOK_ABLATION")
+    ablation: Ablation = Field(default=Ablation.NONE, validation_alias="CITEBOOK_ABLATION")
     eval_mode: bool = Field(default=False, validation_alias="CITEBOOK_EVAL")
 
     @field_validator("ollama_url", "kb_url")
@@ -58,7 +49,7 @@ class Settings(BaseSettings):
                 "CITEBOOK_MODEL_PROVIDER=hosted requires CITEBOOK_ALLOW_HOSTED=true. "
                 "Hosted models send conversation text to a third party and are off by default."
             )
-        if self.ablation != "none" and not self.eval_mode:
+        if self.ablation != Ablation.NONE and not self.eval_mode:
             raise ValueError(
                 "CITEBOOK_ABLATION switches off safety layers and is allowed only in the "
                 "evaluation runner (CITEBOOK_EVAL=true)."

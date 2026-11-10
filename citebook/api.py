@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from citebook import __version__
-from citebook.config import Ablation, Settings
+from citebook.config import Settings
+from citebook.models import Ablation
 
 
 class Status(BaseModel):

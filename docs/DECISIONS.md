@@ -145,3 +145,14 @@ ZIP codes use the unassigned `000xx` range, so none matches a real place: one pe
 `tools/seed_calendar.py` builds one calendar for four weeks from 9 November 2026: one slot per technician per arrival window, stored in UTC, with no Sunday or closed-date slots. Seeded bookings mark their slots `booked` (both windows for a 2-window service). A seeded random share (`blocked_share`, 0.20) of slots is `blocked`, meaning the technician is busy elsewhere; random unavailability is never `booked`, because every `booked` slot must belong to a booking row. The random draw happens once per slot in a fixed order, so changing a booking never moves the blocked slots. Ids are UUIDv4-shaped values derived from a SHA-256 of the record's key, so they are the same on every run. A test pins the calendar's SHA-256 digest, so CI on Linux confirms the same calendar as Windows; `tzdata` is a runtime dependency (Apache-2.0) because Windows has no system time-zone database.
 
 Seed states fix the clock: `base_week_1` starts Monday 9 November at 7:00 am and `base_week_2` Monday 16 November at 7:00 am, business time. Every seeded booking lies after both, and all are `confirmed`; holds are created by scenarios, because a hold's expiry depends on the scenario's clock. Seeded bookings get their quotes when Phase 2 loads the seed into the database.
+
+## Phase 2
+
+### D-041. First migration is the schema document
+`db/migrations/001_init.sql` holds the SQL block of `docs/BACKEND_SCHEMA.md` section 3 exactly, followed by the indexes; a test fails if the two differ. `bookings(reference)` and `messages(conversation_id, seq)` already have indexes through their `UNIQUE` constraints. Migration files use three-digit numbers, as the schema document says. The runner comes from Citedesk: each migration and the row that records it commit together, and gaps, duplicates, bad names and a database newer than the code are refused.
+
+### D-042. Seeded quotes have no conversation
+Every booking needs a `quote_id`, and seeded bookings were never quoted in a chat, so `quotes.conversation_id` may be `NULL`, and only for quotes the seed creates. Tool code always sets it.
+
+### D-043. Enums live in `citebook/models.py`
+Each enum in schema section 2 is a `StrEnum` in `citebook/models.py` (except `service_code`, which is data). A test compares the code enums with the schema document and with every `CHECK (... IN (...))` constraint in the migrations, and fails if a `CHECK` constraint has no enum. `audit_events.actor` is listed as the enum `actor`. The `ablation` setting now uses the shared enum.

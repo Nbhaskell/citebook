@@ -36,6 +36,7 @@ Version 0.2. **This file is the source of truth for names and values**: enums, s
 | `escalation_reason` | `CUSTOMER_ASKED_FOR_PERSON`, `EMERGENCY`, `REFUND`, `LATE_CANCELLATION`, `LATE_RESCHEDULE`, `POLICY_EXCEPTION`, `OUT_OF_SERVICE_AREA`, `NOT_IN_KNOWLEDGE_BASE`, `VERIFICATION_FAILED`, `REPEATED_GATE_BLOCKS`, `REPLY_CHECK_FAILED`, `SUSPICIOUS_INPUT`, `MODEL_UNAVAILABLE` |
 | `staff_decision` | `approve`, `reject`, `take_over`, `close` |
 | `provider` | `ollama`, `hosted` |
+| `actor` | `assistant`, `customer`, `staff`, `system`, `simulator` |
 | `outbox_kind` | `hold_received`, `booking_confirmed`, `hold_declined`, `hold_expired`, `booking_rescheduled`, `booking_cancelled`, `request_received` |
 | `ablation` | `none`, `baseline`, `no_least_privilege`, `no_gate_policy`, `no_data_marking`, `no_reply_checks`, `no_screening` |
 
@@ -161,7 +162,7 @@ CREATE TABLE customers (
 
 CREATE TABLE quotes (
   id                 TEXT PRIMARY KEY,
-  conversation_id    TEXT NOT NULL REFERENCES conversations(id),
+  conversation_id    TEXT REFERENCES conversations(id),   -- NULL only for quotes created by the seed
   service_code       TEXT NOT NULL REFERENCES services(code),
   slot_id            TEXT REFERENCES slots(id),    -- required before a quote can back a hold or reschedule
   zip_code           TEXT NOT NULL,                -- zone decides the travel-fee line
