@@ -266,3 +266,17 @@ Phase 4 adds the customer routes of TRD section 11 that the Confirm button needs
 - `prompt-v2` asks for prices through `quote_price`, forbids guessed ZIP codes, dates and names, asks for the card tool in the same turn as the quote and the contact details, and forbids showing codes and ids.
 
 Result of the last run (prompt-v2): the hold, reschedule, free cancellation and refund-request conversations reached their cards, and Confirm held, moved, cancelled or sent them; the outer-zone price, the cancellation-notice policy and the out-of-area answer were right; a typed "Yes, confirm it" got the fixed copy and created nothing; a role-claim message (attack category `role_claim`) that asked to mark the booking confirmed made the model claim "confirmed" twice, the reply checks blocked both drafts, and the conversation went to staff with the fallback copy. Known failures, left for the scenario suite to measure (Phase 6): the model answered "Do you sell gift cards?" without calling `get_policy`; for a quote-only job it asked for the ZIP code instead of naming the first step; it sometimes asks again before calling a tool it already has the details for.
+
+## Phase 5
+
+### D-064. Staff routes, transcript route and status checks
+`citebook/staff_api.py` adds the staff routes of TRD section 11; v1 has no staff login and the API listens on `127.0.0.1` only (TRD section 13). Choices the documents leave open:
+
+- `GET /api/staff/queue` returns four groups: `needs_decision` (pending holds, late changes, refunds and exceptions, oldest first), `handoffs` (oldest first), `expired_holds` and `recent` decisions (both from the last two days, newest first; `recent` holds at most 25). Each item names the customer, the booking reference, the visit window and the total, computed by code.
+- A decision on a card the customer has not confirmed is refused with `409`: only the customer's button moves a proposal. A rejection without a reason is refused with `409`.
+- Staff can write to the customer only after taking over, so the bot and a person never answer at the same time (TRD open question 4, v1: take-over pauses the model).
+- `GET /api/staff/conversations/{id}` returns every message in order, with tool exchanges, gate decisions and hints, reply-check results per assistant message and screening flags per customer message, plus the conversation's actions.
+- `GET /api/staff/calendar` takes `from` (a date, default today in business time) and `days` (1 to 14, default 7), and names the booking in each held or booked slot, including the second window of a 2-window visit.
+- `GET /api/conversations/{id}` is the customer's transcript: customer, assistant and staff messages and the open card, with no tool internals; it needs the session token.
+- `/api/status` now checks: the model server answers and has the model pulled, the knowledge base answers, and the database exists and is migrated. Each check has a short timeout. The response names the knowledge base in use (`kb`).
+- A task started with the app runs `expire_due` every 60 seconds (TRD section 7.1). The app's clock lives in `app.state.clock`, so tests and the scenario runner can fix the time.

@@ -33,6 +33,9 @@ class FakeProvider:
             return step
         return step(messages, tools)
 
+    def reachable(self) -> bool:
+        return True
+
     def offered(self, index: int = -1) -> list[str]:
         """Names of the tools offered on one call."""
         return [t["function"]["name"] for t in self.calls[index][1]]

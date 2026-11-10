@@ -35,7 +35,8 @@ PYTHON_HINT = "winget install --id Python.Python.3.13  (the project needs Python
 NODE_HINT = "winget install --id OpenJS.NodeJS.LTS  (the web app needs Node.js 20.19 or newer)"
 KB_HINT = (
     "Start rag-project on port 8000 with RAG_DOCS_DIR set to this repository's kb/docs folder "
-    "(docs/TRD.md section 6.1). Not needed until Phase 3; tests use FakeKB."
+    "(docs/TRD.md section 6.1). Needed only with CITEBOOK_KB=rag_project; tests and the default "
+    "settings use FakeKB."
 )
 
 

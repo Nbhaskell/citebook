@@ -24,10 +24,21 @@ class OllamaProvider:
     def __init__(
         self, base_url: str, model: str, *, think: bool = False, timeout: float = 60.0
     ) -> None:
-        self.url = base_url.rstrip("/") + "/api/chat"
+        self.base_url = base_url.rstrip("/")
+        self.url = self.base_url + "/api/chat"
         self.model = model
         self.think = think
         self.timeout = timeout
+
+    def reachable(self) -> bool:
+        """True when the Ollama server answers and has this model pulled (for /api/status)."""
+        try:
+            with urllib.request.urlopen(self.base_url + "/api/tags", timeout=2) as response:
+                tags = json.loads(response.read().decode("utf-8"))
+        except (OSError, urllib.error.URLError, ValueError):
+            return False
+        names = {m.get("name") for m in tags.get("models", []) if isinstance(m, dict)}
+        return self.model in names
 
     def request_body(self, messages: list[Message], tools: list[dict[str, Any]]) -> dict[str, Any]:
         body: dict[str, Any] = {

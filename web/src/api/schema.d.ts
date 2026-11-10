@@ -55,6 +55,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Transcript
+         * @description The customer's view: their messages, the replies and any open card. No tool internals.
+         */
+        get: operations["transcript_api_conversations__conversation_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/conversations/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -66,6 +86,152 @@ export interface paths {
         put?: never;
         /** Message */
         post: operations["message_api_conversations__conversation_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/actions/{action_id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Staff Decide */
+        post: operations["staff_decide_api_staff_actions__action_id__decide_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calendar */
+        get: operations["calendar_api_staff_calendar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conversation Detail */
+        get: operations["conversation_detail_api_staff_conversations__conversation_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/conversations/{conversation_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Staff Close */
+        post: operations["staff_close_api_staff_conversations__conversation_id__close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/conversations/{conversation_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Staff Message
+         * @description Staff write to the customer in the widget. Only after taking over: the bot is paused.
+         */
+        post: operations["staff_message_api_staff_conversations__conversation_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/conversations/{conversation_id}/take-over": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Staff Take Over */
+        post: operations["staff_take_over_api_staff_conversations__conversation_id__take_over_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/outbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Outbox
+         * @description Drafted notifications, newest first. Nothing is ever sent.
+         */
+        get: operations["outbox_api_staff_outbox_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Queue
+         * @description Pending decisions and handoffs oldest first; expired holds and recent decisions newest
+         *     first (UI brief section 4).
+         */
+        get: operations["queue_api_staff_queue_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -98,6 +264,40 @@ export interface components {
          * @enum {string}
          */
         Ablation: "none" | "baseline" | "no_least_privilege" | "no_gate_policy" | "no_data_marking" | "no_reply_checks" | "no_screening";
+        /** ActionOut */
+        ActionOut: {
+            /** Action Id */
+            action_id: string;
+            /** Action Type */
+            action_type: string;
+            /** Booking Reference */
+            booking_reference: string | null;
+            /** Created At */
+            created_at: string;
+            /** Failure Detail */
+            failure_detail: string | null;
+            /** Origin */
+            origin: string;
+            /** Reason */
+            reason: string | null;
+            /** Status */
+            status: string;
+            /** Summary */
+            summary: string;
+            /** Updated At */
+            updated_at: string;
+        };
+        /** Calendar */
+        Calendar: {
+            /** Days */
+            days: number;
+            /** First Day */
+            first_day: string;
+            /** Slots */
+            slots: components["schemas"]["SlotOut"][];
+            /** Technicians */
+            technicians: components["schemas"]["TechnicianOut"][];
+        };
         /** CancelOut */
         CancelOut: {
             /** Outcome */
@@ -119,6 +319,19 @@ export interface components {
             rows: string[];
             /** Title */
             title: string;
+        };
+        /** CheckOut */
+        CheckOut: {
+            /** Attempt */
+            attempt: number;
+            /** Code */
+            code: string;
+            /** Detail */
+            detail: {
+                [key: string]: unknown;
+            };
+            /** Passed */
+            passed: boolean;
         };
         /** ConfirmIn */
         ConfirmIn: {
@@ -146,10 +359,82 @@ export interface components {
             /** Synthetic Data */
             synthetic_data: boolean;
         };
+        /** ConversationDetail */
+        ConversationDetail: {
+            /** Actions */
+            actions: components["schemas"]["ActionOut"][];
+            /** Channel */
+            channel: string;
+            /** Conversation Id */
+            conversation_id: string;
+            customer: components["schemas"]["CustomerOut"] | null;
+            /** Last Activity At */
+            last_activity_at: string;
+            /** Messages */
+            messages: components["schemas"]["MessageOut"][];
+            /** Started At */
+            started_at: string;
+            /** Status */
+            status: string;
+            /** Verification State */
+            verification_state: string;
+            /** Verified Booking Reference */
+            verified_booking_reference: string | null;
+        };
+        /** ConversationState */
+        ConversationState: {
+            /** Status */
+            status: string;
+        };
         /** CustomerMessage */
         CustomerMessage: {
             /** Text */
             text: string;
+        };
+        /** CustomerOut */
+        CustomerOut: {
+            /** Address */
+            address: string;
+            /** Email */
+            email: string | null;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string;
+            /** Zip Code */
+            zip_code: string;
+        };
+        /** DecisionIn */
+        DecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Reason */
+            reason?: string | null;
+            /** Review Seconds */
+            review_seconds?: number | null;
+        };
+        /** DecisionOut */
+        DecisionOut: {
+            /** Action Status */
+            action_status: string;
+            /** Outcome */
+            outcome: string;
+        };
+        /** DraftOut */
+        DraftOut: {
+            /** Body */
+            body: string;
+            /** Booking Reference */
+            booking_reference: string | null;
+            /** Created At */
+            created_at: string;
+            /** Draft Id */
+            draft_id: string;
+            /** Kind */
+            kind: string;
         };
         /** ErrorBody */
         ErrorBody: {
@@ -164,6 +449,28 @@ export interface components {
         ErrorResponse: {
             error: components["schemas"]["ErrorBody"];
         };
+        /** MessageOut */
+        MessageOut: {
+            /** At */
+            at: string;
+            /**
+             * Checks
+             * @default []
+             */
+            checks: components["schemas"]["CheckOut"][];
+            /**
+             * Flags
+             * @default []
+             */
+            flags: string[];
+            /** Role */
+            role: string;
+            /** Seq */
+            seq: number;
+            /** Text */
+            text: string;
+            tool?: components["schemas"]["ToolEvent"] | null;
+        };
         /** NewConversation */
         NewConversation: {
             /**
@@ -173,6 +480,48 @@ export interface components {
              */
             channel: "web_widget" | "simulator";
         };
+        /** Queue */
+        Queue: {
+            /** Expired Holds */
+            expired_holds: components["schemas"]["QueueItem"][];
+            /** Handoffs */
+            handoffs: components["schemas"]["QueueItem"][];
+            /** Needs Decision */
+            needs_decision: components["schemas"]["QueueItem"][];
+            /** Recent */
+            recent: components["schemas"]["QueueItem"][];
+        };
+        /** QueueItem */
+        QueueItem: {
+            /** Action Id */
+            action_id: string;
+            /** Action Type */
+            action_type: string;
+            /** Booking Reference */
+            booking_reference: string | null;
+            /** Conversation Id */
+            conversation_id: string;
+            /** Created At */
+            created_at: string;
+            /** Customer Name */
+            customer_name: string | null;
+            /** Hold Expires At */
+            hold_expires_at: string | null;
+            /** Origin */
+            origin: string;
+            /** Reason */
+            reason: string | null;
+            /** Status */
+            status: string;
+            /** Summary */
+            summary: string;
+            /** Total */
+            total: string | null;
+            /** Updated At */
+            updated_at: string;
+            /** Visit */
+            visit: string | null;
+        };
         /** ReplyOut */
         ReplyOut: {
             /** Kind */
@@ -180,15 +529,42 @@ export interface components {
             /** Text */
             text: string;
         };
+        /** SlotOut */
+        SlotOut: {
+            /** Booking Reference */
+            booking_reference: string | null;
+            /** Ends At */
+            ends_at: string;
+            /** Hold Expires At */
+            hold_expires_at: string | null;
+            /** Label */
+            label: string;
+            /** Service */
+            service: string | null;
+            /** Slot Id */
+            slot_id: string;
+            /** Starts At */
+            starts_at: string;
+            /** Status */
+            status: string;
+            /** Technician Id */
+            technician_id: string;
+        };
+        /** StaffMessageIn */
+        StaffMessageIn: {
+            /** Text */
+            text: string;
+        };
         /**
          * Status
-         * @description What the service can say about itself. `None` means "not checked yet": the parts that
-         *     would be checked (model, knowledge base, database) are built in later phases.
+         * @description What the service can say about itself. `None` means the part could not be checked.
          */
         Status: {
             ablation: components["schemas"]["Ablation"];
             /** Database */
             database: string | null;
+            /** Kb */
+            kb: string;
             /** Kb Reachable */
             kb_reachable: boolean | null;
             /** Model */
@@ -203,6 +579,47 @@ export interface components {
             synthetic_data: boolean;
             /** Version */
             version: string;
+        };
+        /** TechnicianOut */
+        TechnicianOut: {
+            /** Name */
+            name: string;
+            /** Technician Id */
+            technician_id: string;
+        };
+        /** ToolEvent */
+        ToolEvent: {
+            /** Arguments */
+            arguments: unknown;
+            /** Gate Decision */
+            gate_decision: string;
+            /** Name */
+            name: string;
+            /** Ok */
+            ok: boolean;
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            };
+            /** Say */
+            say: string | null;
+        };
+        /** TranscriptMessage */
+        TranscriptMessage: {
+            /** At */
+            at: string;
+            /** Role */
+            role: string;
+            /** Text */
+            text: string;
+        };
+        /** TranscriptOut */
+        TranscriptOut: {
+            card: components["schemas"]["CardOut"] | null;
+            /** Messages */
+            messages: components["schemas"]["TranscriptMessage"][];
+            /** Status */
+            status: string;
         };
         /** TurnOut */
         TurnOut: {
@@ -405,6 +822,66 @@ export interface operations {
             };
         };
     };
+    transcript_api_conversations__conversation_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Session-Token"?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscriptOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     message_api_conversations__conversation_id__messages_post: {
         parameters: {
             query?: never;
@@ -429,6 +906,475 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TurnOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    staff_decide_api_staff_actions__action_id__decide_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    calendar_api_staff_calendar_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Calendar"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    conversation_detail_api_staff_conversations__conversation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationDetail"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    staff_close_api_staff_conversations__conversation_id__close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationState"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    staff_message_api_staff_conversations__conversation_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffMessageIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationState"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    staff_take_over_api_staff_conversations__conversation_id__take_over_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationState"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    outbox_api_staff_outbox_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftOut"][];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    queue_api_staff_queue_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Queue"];
                 };
             };
             /** @description Not Found */

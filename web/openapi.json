@@ -14,6 +14,119 @@
         "title": "Ablation",
         "type": "string"
       },
+      "ActionOut": {
+        "properties": {
+          "action_id": {
+            "title": "Action Id",
+            "type": "string"
+          },
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "booking_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Reference"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "failure_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Detail"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action_id",
+          "action_type",
+          "status",
+          "origin",
+          "reason",
+          "summary",
+          "booking_reference",
+          "created_at",
+          "updated_at",
+          "failure_detail"
+        ],
+        "title": "ActionOut",
+        "type": "object"
+      },
+      "Calendar": {
+        "properties": {
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "first_day": {
+            "title": "First Day",
+            "type": "string"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/SlotOut"
+            },
+            "title": "Slots",
+            "type": "array"
+          },
+          "technicians": {
+            "items": {
+              "$ref": "#/components/schemas/TechnicianOut"
+            },
+            "title": "Technicians",
+            "type": "array"
+          }
+        },
+        "required": [
+          "first_day",
+          "days",
+          "technicians",
+          "slots"
+        ],
+        "title": "Calendar",
+        "type": "object"
+      },
       "CancelOut": {
         "properties": {
           "outcome": {
@@ -78,6 +191,35 @@
           "expires_at"
         ],
         "title": "CardOut",
+        "type": "object"
+      },
+      "CheckOut": {
+        "properties": {
+          "attempt": {
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "additionalProperties": true,
+            "title": "Detail",
+            "type": "object"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "attempt",
+          "code",
+          "passed",
+          "detail"
+        ],
+        "title": "CheckOut",
         "type": "object"
       },
       "ConfirmIn": {
@@ -164,6 +306,96 @@
         "title": "ConversationCreated",
         "type": "object"
       },
+      "ConversationDetail": {
+        "properties": {
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/ActionOut"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "customer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CustomerOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_activity_at": {
+            "title": "Last Activity At",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/MessageOut"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "verification_state": {
+            "title": "Verification State",
+            "type": "string"
+          },
+          "verified_booking_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified Booking Reference"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "status",
+          "channel",
+          "verification_state",
+          "verified_booking_reference",
+          "customer",
+          "started_at",
+          "last_activity_at",
+          "messages",
+          "actions"
+        ],
+        "title": "ConversationDetail",
+        "type": "object"
+      },
+      "ConversationState": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "ConversationState",
+        "type": "object"
+      },
       "CustomerMessage": {
         "properties": {
           "text": {
@@ -177,6 +409,145 @@
           "text"
         ],
         "title": "CustomerMessage",
+        "type": "object"
+      },
+      "CustomerOut": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "zip_code": {
+            "title": "Zip Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "email",
+          "address",
+          "zip_code"
+        ],
+        "title": "CustomerOut",
+        "type": "object"
+      },
+      "DecisionIn": {
+        "properties": {
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "review_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Seconds"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "DecisionIn",
+        "type": "object"
+      },
+      "DecisionOut": {
+        "properties": {
+          "action_status": {
+            "title": "Action Status",
+            "type": "string"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          }
+        },
+        "required": [
+          "outcome",
+          "action_status"
+        ],
+        "title": "DecisionOut",
+        "type": "object"
+      },
+      "DraftOut": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "booking_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Reference"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "draft_id": {
+            "title": "Draft Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "draft_id",
+          "kind",
+          "body",
+          "booking_reference",
+          "created_at"
+        ],
+        "title": "DraftOut",
         "type": "object"
       },
       "ErrorBody": {
@@ -214,6 +585,60 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "MessageOut": {
+        "properties": {
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "checks": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CheckOut"
+            },
+            "title": "Checks",
+            "type": "array"
+          },
+          "flags": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolEvent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "seq",
+          "role",
+          "text",
+          "at"
+        ],
+        "title": "MessageOut",
+        "type": "object"
+      },
       "NewConversation": {
         "properties": {
           "channel": {
@@ -227,6 +652,166 @@
           }
         },
         "title": "NewConversation",
+        "type": "object"
+      },
+      "Queue": {
+        "properties": {
+          "expired_holds": {
+            "items": {
+              "$ref": "#/components/schemas/QueueItem"
+            },
+            "title": "Expired Holds",
+            "type": "array"
+          },
+          "handoffs": {
+            "items": {
+              "$ref": "#/components/schemas/QueueItem"
+            },
+            "title": "Handoffs",
+            "type": "array"
+          },
+          "needs_decision": {
+            "items": {
+              "$ref": "#/components/schemas/QueueItem"
+            },
+            "title": "Needs Decision",
+            "type": "array"
+          },
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/QueueItem"
+            },
+            "title": "Recent",
+            "type": "array"
+          }
+        },
+        "required": [
+          "needs_decision",
+          "handoffs",
+          "expired_holds",
+          "recent"
+        ],
+        "title": "Queue",
+        "type": "object"
+      },
+      "QueueItem": {
+        "properties": {
+          "action_id": {
+            "title": "Action Id",
+            "type": "string"
+          },
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "booking_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Reference"
+          },
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
+          },
+          "hold_expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Expires At"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "visit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visit"
+          }
+        },
+        "required": [
+          "action_id",
+          "conversation_id",
+          "action_type",
+          "status",
+          "reason",
+          "origin",
+          "summary",
+          "customer_name",
+          "booking_reference",
+          "visit",
+          "total",
+          "created_at",
+          "updated_at",
+          "hold_expires_at"
+        ],
+        "title": "QueueItem",
         "type": "object"
       },
       "ReplyOut": {
@@ -247,8 +832,97 @@
         "title": "ReplyOut",
         "type": "object"
       },
+      "SlotOut": {
+        "properties": {
+          "booking_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Reference"
+          },
+          "ends_at": {
+            "title": "Ends At",
+            "type": "string"
+          },
+          "hold_expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Expires At"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "service": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service"
+          },
+          "slot_id": {
+            "title": "Slot Id",
+            "type": "string"
+          },
+          "starts_at": {
+            "title": "Starts At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "technician_id": {
+            "title": "Technician Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slot_id",
+          "technician_id",
+          "starts_at",
+          "ends_at",
+          "label",
+          "status",
+          "booking_reference",
+          "service",
+          "hold_expires_at"
+        ],
+        "title": "SlotOut",
+        "type": "object"
+      },
+      "StaffMessageIn": {
+        "properties": {
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "StaffMessageIn",
+        "type": "object"
+      },
       "Status": {
-        "description": "What the service can say about itself. `None` means \"not checked yet\": the parts that\nwould be checked (model, knowledge base, database) are built in later phases.",
+        "description": "What the service can say about itself. `None` means the part could not be checked.",
         "properties": {
           "ablation": {
             "$ref": "#/components/schemas/Ablation"
@@ -263,6 +937,10 @@
               }
             ],
             "title": "Database"
+          },
+          "kb": {
+            "title": "Kb",
+            "type": "string"
           },
           "kb_reachable": {
             "anyOf": [
@@ -315,10 +993,129 @@
           "synthetic_data",
           "ablation",
           "model_reachable",
+          "kb",
           "kb_reachable",
           "database"
         ],
         "title": "Status",
+        "type": "object"
+      },
+      "TechnicianOut": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "technician_id": {
+            "title": "Technician Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "technician_id",
+          "name"
+        ],
+        "title": "TechnicianOut",
+        "type": "object"
+      },
+      "ToolEvent": {
+        "properties": {
+          "arguments": {
+            "title": "Arguments"
+          },
+          "gate_decision": {
+            "title": "Gate Decision",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          },
+          "say": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Say"
+          }
+        },
+        "required": [
+          "name",
+          "arguments",
+          "ok",
+          "gate_decision",
+          "say",
+          "result"
+        ],
+        "title": "ToolEvent",
+        "type": "object"
+      },
+      "TranscriptMessage": {
+        "properties": {
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "text",
+          "at"
+        ],
+        "title": "TranscriptMessage",
+        "type": "object"
+      },
+      "TranscriptOut": {
+        "properties": {
+          "card": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CardOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/TranscriptMessage"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "messages",
+          "card"
+        ],
+        "title": "TranscriptOut",
         "type": "object"
       },
       "TurnOut": {
@@ -616,6 +1413,92 @@
         "summary": "Start"
       }
     },
+    "/api/conversations/{conversation_id}": {
+      "get": {
+        "description": "The customer's view: their messages, the replies and any open card. No tool internals.",
+        "operationId": "transcript_api_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Session-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Transcript"
+      }
+    },
     "/api/conversations/{conversation_id}/messages": {
       "post": {
         "operationId": "message_api_conversations__conversation_id__messages_post",
@@ -709,6 +1592,607 @@
           }
         },
         "summary": "Message"
+      }
+    },
+    "/api/staff/actions/{action_id}/decide": {
+      "post": {
+        "operationId": "staff_decide_api_staff_actions__action_id__decide_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action_id",
+            "required": true,
+            "schema": {
+              "title": "Action Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Staff Decide",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/calendar": {
+      "get": {
+        "operationId": "calendar_api_staff_calendar_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 7,
+              "maximum": 14,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Calendar"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Calendar",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/conversations/{conversation_id}": {
+      "get": {
+        "operationId": "conversation_detail_api_staff_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Conversation Detail",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/conversations/{conversation_id}/close": {
+      "post": {
+        "operationId": "staff_close_api_staff_conversations__conversation_id__close_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Staff Close",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/conversations/{conversation_id}/messages": {
+      "post": {
+        "description": "Staff write to the customer in the widget. Only after taking over: the bot is paused.",
+        "operationId": "staff_message_api_staff_conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffMessageIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Staff Message",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/conversations/{conversation_id}/take-over": {
+      "post": {
+        "operationId": "staff_take_over_api_staff_conversations__conversation_id__take_over_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Staff Take Over",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/outbox": {
+      "get": {
+        "description": "Drafted notifications, newest first. Nothing is ever sent.",
+        "operationId": "outbox_api_staff_outbox_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DraftOut"
+                  },
+                  "title": "Response Outbox Api Staff Outbox Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Outbox",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/queue": {
+      "get": {
+        "description": "Pending decisions and handoffs oldest first; expired holds and recent decisions newest\nfirst (UI brief section 4).",
+        "operationId": "queue_api_staff_queue_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Queue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Queue",
+        "tags": [
+          "staff"
+        ]
       }
     },
     "/api/status": {

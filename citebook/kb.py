@@ -78,6 +78,14 @@ class RagProjectKB:
         self.timeout = timeout
         self.max_distance = max_distance
 
+    def reachable(self) -> bool:
+        """True when the retrieval endpoint answers (for /api/status)."""
+        try:
+            self.search("office hours", 1)
+        except KBUnavailable:
+            return False
+        return True
+
     def search(self, question: str, k: int) -> list[Passage]:
         body = json.dumps({"question": question, "k": k}).encode("utf-8")
         request = urllib.request.Request(
@@ -177,6 +185,9 @@ class FakeKB:
             for heading, body in _sections(path.read_text(encoding="utf-8")):
                 passages.append(Passage(path.name, heading, body, 1.0))
         return cls(passages, max_distance)
+
+    def reachable(self) -> bool:
+        return not self.fail
 
     def search(self, question: str, k: int) -> list[Passage]:
         if self.fail:

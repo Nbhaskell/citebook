@@ -1,4 +1,4 @@
-"""HTTP API (TRD section 11). Customer routes for Phase 4; staff routes follow in Phase 5.
+"""HTTP API (TRD section 11): customer routes here, staff routes in citebook/staff_api.py.
 
 Every customer route needs the conversation's session token in the `X-Session-Token` header. The
 token is random, returned once, and stored only as a SHA-256 hash. A wrong or missing token gets
@@ -10,54 +10,43 @@ has one shape: {"error": {"code", "message", "request_id"}}.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import hmac
 import secrets
 import sqlite3
 import uuid
-from collections.abc import Callable, Iterator
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
-from typing import Annotated, Literal
+from pathlib import Path
+from typing import Literal
 
-from fastapi import Depends, FastAPI, Header, Request
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from citebook import __version__
 from citebook.actions import Rules, confirm, withdraw
+from citebook.api_common import ERRORS, ApiError, Clock, Db, Token
 from citebook.config import Settings
-from citebook.db import connect, transaction
-from citebook.events import audit
+from citebook.db import applied_versions, connect, transaction
+from citebook.events import audit, log
 from citebook.expiry import expire_due
 from citebook.kb import FakeKB, KnowledgeBase, RagProjectKB
-from citebook.loop import ConversationEnded, LoopConfig, add_message, handle_message
+from citebook.loop import ConversationEnded, LoopConfig, _card, add_message, handle_message
 from citebook.models import Ablation, ActionType, Actor
 from citebook.outbox import booking_fields
 from citebook.providers.base import ModelProvider
 from citebook.providers.ollama import OllamaProvider
+from citebook.staff_api import router as staff_router
 from citebook.timeutil import to_utc_text
 from citebook.tools.common import load_settings
 
-Clock = Callable[[], datetime]
-
-
-def database(request: Request) -> Iterator[sqlite3.Connection]:
-    """One connection per request (SQLite in WAL mode)."""
-    conn = connect(request.app.state.settings.db_path)
-    try:
-        yield conn
-    finally:
-        conn.close()
-
-
-Db = Annotated[sqlite3.Connection, Depends(database)]
-Token = Annotated[str | None, Header(alias="X-Session-Token")]
-
 
 class Status(BaseModel):
-    """What the service can say about itself. `None` means "not checked yet": the parts that
-    would be checked (model, knowledge base, database) are built in later phases."""
+    """What the service can say about itself. `None` means the part could not be checked."""
 
     service: str
     version: str
@@ -66,24 +55,9 @@ class Status(BaseModel):
     synthetic_data: bool
     ablation: Ablation
     model_reachable: bool | None
+    kb: str
     kb_reachable: bool | None
     database: str | None
-
-
-class ErrorBody(BaseModel):
-    code: str
-    message: str
-    request_id: str
-
-
-class ErrorResponse(BaseModel):
-    error: ErrorBody
-
-
-class ApiError(Exception):
-    def __init__(self, status: int, code: str, message: str) -> None:
-        super().__init__(message)
-        self.status, self.code, self.message = status, code, message
 
 
 class NewConversation(BaseModel):
@@ -132,17 +106,24 @@ class ConfirmOut(BaseModel):
     status: str
 
 
+class TranscriptMessage(BaseModel):
+    role: str
+    text: str
+    at: str
+
+
+class TranscriptOut(BaseModel):
+    status: str
+    messages: list[TranscriptMessage]
+    card: CardOut | None
+
+
 class CancelOut(BaseModel):
     outcome: str
     status: str
 
 
-ERRORS: dict[int | str, dict[str, object]] = {
-    404: {"model": ErrorResponse},
-    409: {"model": ErrorResponse},
-    422: {"model": ErrorResponse},
-    503: {"model": ErrorResponse},
-}
+EXPIRY_INTERVAL_S = 60
 
 
 def token_hash(token: str) -> str:
@@ -186,6 +167,47 @@ def confirm_copy(
     return "I've sent your request to our team. A person will review it and reply."
 
 
+def reachable(part: object) -> bool | None:
+    """Ask a provider or knowledge base whether it answers; None if it cannot say."""
+    check = getattr(part, "reachable", None)
+    return bool(check()) if callable(check) else None
+
+
+def database_state(settings: Settings) -> str:
+    if not Path(settings.db_path).exists():
+        return "missing: run python -m tools.seed_db"
+    try:
+        conn = connect(settings.db_path)
+        try:
+            version = applied_versions(conn)
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return "error"
+    return f"ok (migration {version[-1]:03d})" if version else "empty: run python -m tools.seed_db"
+
+
+async def expire_every_minute(settings: Settings, now_of: Clock) -> None:
+    """Apply expiries every 60 seconds, so the staff queue and calendar stay current when
+    nobody is chatting (TRD section 7.1)."""
+    while True:
+        await asyncio.sleep(EXPIRY_INTERVAL_S)
+        try:
+            await asyncio.to_thread(_expire_once, settings, now_of())
+        except sqlite3.Error:
+            log("expiry_failed")
+
+
+def _expire_once(settings: Settings, now: datetime) -> None:
+    if not Path(settings.db_path).exists():
+        return
+    conn = connect(settings.db_path)
+    try:
+        expire_due(conn, Rules.from_settings(load_settings(conn)), now)
+    finally:
+        conn.close()
+
+
 def create_app(
     settings: Settings,
     *,
@@ -193,9 +215,20 @@ def create_app(
     kb: KnowledgeBase | None = None,
     clock: Clock | None = None,
 ) -> FastAPI:
-    app = FastAPI(title="Citebook API", version=__version__)
-    app.state.settings = settings
     now_of: Clock = clock or (lambda: datetime.now(UTC))
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        task = asyncio.create_task(expire_every_minute(settings, now_of))
+        try:
+            yield
+        finally:
+            task.cancel()
+
+    app = FastAPI(title="Citebook API", version=__version__, lifespan=lifespan)
+    app.state.settings = settings
+    app.state.clock = now_of
+    app.include_router(staff_router)
     parts: dict[str, object] = {}
 
     def get_provider() -> ModelProvider:
@@ -277,9 +310,33 @@ def create_app(
             model=settings.model,
             synthetic_data=settings.synthetic_data,
             ablation=settings.ablation,
-            model_reachable=None,
-            kb_reachable=None,
-            database=None,
+            kb=settings.kb,
+            model_reachable=reachable(get_provider()),
+            kb_reachable=reachable(get_kb()),
+            database=database_state(settings),
+        )
+
+    @app.get("/api/conversations/{conversation_id}", responses=ERRORS)
+    def transcript(conversation_id: str, conn: Db, x_session_token: Token = None) -> TranscriptOut:
+        """The customer's view: their messages, the replies and any open card. No tool internals."""
+        conversation = conversation_for(conn, conversation_id, x_session_token)
+        rows = conn.execute(
+            "SELECT role, content, created_at FROM messages WHERE conversation_id = ?"
+            " AND role IN ('customer', 'assistant', 'staff') ORDER BY seq",
+            (conversation_id,),
+        ).fetchall()
+        open_card = conn.execute(
+            "SELECT id FROM actions WHERE conversation_id = ? AND status = 'proposed'",
+            (conversation_id,),
+        ).fetchone()
+        card = _card(conn, open_card["id"]) if open_card else None
+        return TranscriptOut(
+            status=conversation["status"],
+            messages=[
+                TranscriptMessage(role=r["role"], text=r["content"], at=r["created_at"])
+                for r in rows
+            ],
+            card=CardOut(**card.__dict__) if card else None,
         )
 
     @app.post("/api/conversations", status_code=201, responses=ERRORS)
