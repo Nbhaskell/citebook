@@ -543,7 +543,9 @@ class _Turn:
         the turn's remaining budget (for example to create the card it talked about)."""
         draft = plain_text(draft)
         if self.config.ablation in {Ablation.NO_REPLY_CHECKS, Ablation.BASELINE}:
-            self.reply("text", draft)
+            # Evaluation only: the checks run and are stored for the scorer, but do not act.
+            message_id = self.reply("text", draft)
+            _store_checks(self.conn, message_id, [check_reply(draft, self.allowed(state))])
             return "text"
         attempts = [check_reply(draft, self.allowed(state))]
         final, kind = draft, "text"

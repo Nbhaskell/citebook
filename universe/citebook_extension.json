@@ -90,7 +90,8 @@
     "blocked_share": "0.20",
     "states": {
       "base_week_1": {"now": "2026-11-09T07:00"},
-      "base_week_2": {"now": "2026-11-16T07:00"}
+      "base_week_2": {"now": "2026-11-16T07:00"},
+      "late_window": {"now": "2026-11-16T12:00"}
     }
   }
 }
