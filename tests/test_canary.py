@@ -4,6 +4,7 @@ events. Planted canary strings go through every flow that writes events; none ma
 from __future__ import annotations
 
 import logging
+import re
 import sqlite3
 import uuid
 from datetime import timedelta
@@ -76,6 +77,16 @@ def test_audit_refuses_text_before_writing_anything(db: sqlite3.Connection) -> N
     with pytest.raises(ValueError):
         audit(db, Actor.SYSTEM, "x", reason=REASON)
     assert db.execute("SELECT COUNT(*) FROM audit_events").fetchone()[0] == 0
+
+
+_IDS = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d{4}-\d\d-\d\dT[\d:,.]+Z?"
+)
+
+
+def _without_ids(text: str) -> str:
+    """Random ids and timestamps can contain a 4-digit marker such as 9182 by chance."""
+    return _IDS.sub("", text)
 
 
 def _canaries(extra: list[str]) -> list[str]:
@@ -181,8 +192,8 @@ def test_no_canary_reaches_the_audit_table_or_the_log(
 
     events = db.execute("SELECT * FROM audit_events").fetchall()
     assert len(events) > 10, "the flows above should have written many events"
-    stored = "\n".join(" ".join(str(v) for v in tuple(row)) for row in events)
-    logged = caplog.text
+    stored = _without_ids("\n".join(" ".join(str(v) for v in tuple(row)) for row in events))
+    logged = _without_ids(caplog.text)
     assert logged, "events should also be logged"
     for canary in _canaries([held.booking_reference or "", "CB-4MVX7A"]):
         if not canary:
