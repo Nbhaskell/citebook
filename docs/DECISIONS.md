@@ -104,3 +104,11 @@ Type checking is `mypy --strict` with the pydantic plugin. Lint and format are `
 
 ### D-029. License check of the Python dependencies
 Every installed package was checked with a metadata-reading script on 2026-11-09: 32 packages, all MIT, BSD, Apache-2.0 or PSF, with one exception: `pathspec` 1.1.1 (MPL-2.0, weak file-level copyleft), pulled in by `mypy`. It is development-only, unmodified and not redistributed, so it does not affect the MIT license of this repository. Citetally accepted the same package on the same grounds. **Provisional** until confirmed for this repository. No AGPL or GPL.
+
+### D-030. Settings use the names in TRD section 12, in one class, with `.env` optional
+`citebook/config.py` has a single `Settings` class (pydantic-settings). Each field is bound to its documented variable name (`CITEBOOK_*`, plus `OLLAMA_URL`), empty values fall back to defaults so `.env.example` can ship with blank entries, and unknown variables are ignored. Phase 0 includes only the settings the status route and the safety switches need; the turn-loop limits arrive in Phase 4. Two safety switches are enforced at startup and tested: `CITEBOOK_MODEL_PROVIDER=hosted` needs `CITEBOOK_ALLOW_HOSTED=true` (rule 11), and any `CITEBOOK_ABLATION` other than `none` needs `CITEBOOK_EVAL=true` (rule 9). Service URLs must be `http://` or `https://`. Until `citebook/models.py` exists (Phase 2), the `ablation` values are a `Literal` in `config.py`; Phase 2 moves them into the shared enums.
+
+The server's bind address is a constant, not a setting: `python -m citebook` always binds to `127.0.0.1`, because v1 has no authentication. The app is built by `create_app(settings)`, not a module-level global, so tests never read a local `.env`.
+
+### D-031. `/api/status` reports only what exists
+The status response names the service, version, provider, model, synthetic-data flag and the ablation in force. `model_reachable`, `kb_reachable` and `database` are `null` ("not checked yet") until the phases that build those parts, so the page never shows a green check for something unchecked.
