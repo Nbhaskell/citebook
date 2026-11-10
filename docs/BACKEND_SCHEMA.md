@@ -337,7 +337,7 @@ Reschedule keeps the booking and swaps `slot_id` and `quote_id` in one transacti
 Tool result returned to the model (always this envelope):
 
 ```json
-{"ok": true, "tool": "quote_price", "data": {"quote_id": "…", "total": "$149.00", "lines": [["Call-out fee", "$89.00"], ["Drain cleaning, one fixture (starting price)", "$149.00"], ["Call-out fee credited when the work is approved", "-$89.00"]], "is_estimate": true, "note": "Starting price: final price confirmed on site. If you decline the work on the day, the $89.00 call-out fee applies. Price valid until 5:40 PM"}, "untrusted_fields": []}
+{"ok": true, "tool": "quote_price", "data": {"quote_id": "…", "total": "$149.00", "lines": [["Call-out fee", "$89.00"], ["Drain cleaning, one fixture (starting price)", "$149.00"], ["Call-out fee credited when you approve the work", "-$89.00"]], "is_estimate": true, "note": "Starting price: final price confirmed on site. If you decline the work on the day, the $89.00 call-out fee applies. Price valid until 5:40 PM."}, "untrusted_fields": []}
 ```
 
 Refusal returned to the model:

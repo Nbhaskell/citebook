@@ -162,3 +162,6 @@ Each enum in schema section 2 is a `StrEnum` in `citebook/models.py` (except `se
 
 ### D-045. Money helpers
 Amounts are integer cents. Rates and dollar amounts are `Decimal`; a float, string or `bool` is refused with `TypeError`. Rounding is half up, away from zero (`$0.025` becomes 3 cents, not the 2 cents that banker's rounding gives). Display is `$1,450.00`, and a credit line is `-$89.00`.
+
+### D-046. Emergency-rate visits get no call-out credit
+The business says the call-out fee is credited to approved work, and that the emergency call-out fee replaces the standard one. It does not say the emergency fee is credited, so a quote for a visit outside the visit windows shows the $175 fee and no credit line. A quote never promises money back that the business has not published. Online slots are always inside the visit windows, so this rule matters only for quotes staff ask for.
