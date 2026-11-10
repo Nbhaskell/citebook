@@ -3,16 +3,68 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Citebook (development)</title>
+    <title>Kestrel Hollow Plumbing (demo)</title>
   </head>
   <body>
-    <main>
-      <h1>Citebook</h1>
-      <p>Demo: all details are invented. Development entry points:</p>
-      <ul>
-        <li><a href="/widget/">Customer widget</a></li>
-        <li><a href="/console/">Staff console</a></li>
-      </ul>
-    </main>
+    <div class="site">
+      <p class="site-emergency">
+        Burst pipe, flooding or sewage backing up? Emergency line, 24 hours a day:
+        <a href="tel:555-0172">555-0172</a>
+      </p>
+      <header class="site-header">
+        <p class="site-name">Kestrel Hollow Plumbing</p>
+        <p class="site-phone">Office <a href="tel:555-0171">555-0171</a></p>
+      </header>
+      <main>
+        <section class="site-hero">
+          <h1>Licensed plumbers for homes in Alderbrook</h1>
+          <p>
+            Drain cleaning, leaks, water heaters and sewer lines. Book a visit online in a few
+            minutes: our assistant checks open times, gives the price and holds the time for our
+            office to confirm.
+          </p>
+        </section>
+
+        <section class="site-grid">
+          <div>
+            <h2>Services</h2>
+            <ul>
+              <li>Drain cleaning, one fixture: flat price</li>
+              <li>Main sewer line cleaning: flat price</li>
+              <li>Leak detection: flat price</li>
+              <li>Leak and slab leak repair: quote after a visit</li>
+              <li>Camera inspection and sewer line repair</li>
+              <li>Emergency plumbing repair, day and night</li>
+            </ul>
+            <p class="small">A call-out fee of $89 covers travel and diagnosis. It is credited if you approve the work on the same visit.</p>
+          </div>
+          <div>
+            <h2>Service area</h2>
+            <p>Alderbrook Heights, Millrace, Old Quarry, Tamarind Park and Wren Common.</p>
+            <p>Dunmore Flats and Saltmarsh: a $40 travel fee applies.</p>
+          </div>
+          <div>
+            <h2>Hours</h2>
+            <dl class="hours">
+              <dt>Office</dt>
+              <dd>Mon to Fri 7:30 AM to 5 PM, Sat 8 AM to noon</dd>
+              <dt>Visits</dt>
+              <dd>Arrival windows of 2 hours, Mon to Sat</dd>
+              <dt>Emergencies</dt>
+              <dd>24 hours a day, every day</dd>
+            </dl>
+          </div>
+        </section>
+      </main>
+      <footer class="site-footer">
+        <p><strong>Demo website. This business, its staff and customers are invented.</strong></p>
+        <p class="small">
+          22 Millrace Lane, Alderbrook (invented). Development links:
+          <a href="/widget/">widget page</a> · <a href="/console/">staff console</a>
+        </p>
+      </footer>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/demo/main.tsx"></script>
   </body>
 </html>

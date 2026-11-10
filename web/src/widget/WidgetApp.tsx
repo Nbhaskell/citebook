@@ -16,7 +16,7 @@ export function WidgetApp({ mode = "page" }: { mode?: "page" | "launcher" }) {
   const wasOpen = useRef(false);
 
   useEffect(() => {
-    if (open) panel.current?.querySelector<HTMLElement>("textarea, button")?.focus();
+    if (open) panel.current?.querySelector<HTMLElement>("textarea")?.focus();
     else if (wasOpen.current) launcher.current?.focus();
     wasOpen.current = open;
   }, [open]);
