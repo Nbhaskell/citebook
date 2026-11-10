@@ -134,7 +134,7 @@ stateDiagram-v2
 | "Next Friday" on a Thursday | Resolved by code and shown as an exact date on the card |
 | Daylight saving change week | Slots generated in business time zone; tests cover it |
 | Customer gives someone else's reference | Verification fails without revealing whether the reference exists |
-| Customer claims to be the owner or staff | No effect; there is no role escalation path in chat |
+| Customer claims to be the business owner or staff | No effect; there is no role escalation path in chat |
 | Instructions in booking notes or KB documents | Treated as data; cannot unlock tools; may be flagged `SUSPICIOUS_INPUT` |
 | Model invents a tool or adds arguments | `UNKNOWN_TOOL` or `INVALID_ARGUMENTS` |
 | Model states a price it wasn't given | `PRICE_FROM_TOOL` fails; regenerate; fallback if needed |

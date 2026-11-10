@@ -77,7 +77,7 @@ Citebook's point is to show that an acting chatbot can be useful **and** safe: t
 6. As a customer, I ask for a refund and I'm told a person will review it; nobody promises me money.
 7. As a customer who smells gas or has water flooding, I get safety instructions and the emergency line straight away, not a booking flow.
 8. As staff, I see held bookings, late cancellations, refund requests and handoffs in one queue, with the transcript and every tool call.
-9. As the owner, I can read a report showing how often attacks succeeded with and without the guards.
+9. As an owner, I can read a report showing how often attacks succeeded with and without the guards.
 
 ## 9. Functional requirements
 

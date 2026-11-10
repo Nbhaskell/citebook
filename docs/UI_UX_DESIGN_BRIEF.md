@@ -65,7 +65,7 @@ A simple one-page site for the invented plumber (from Citedesk's `universe/`): s
 |---|---|
 | Held | "Your booking is held. Reference CB-7KQ4MX. Our team will confirm it, usually within 2 business hours." |
 | Typed confirm | "To make sure it's right, please press Confirm on the card above." |
-| Needs verification | "To look up your booking, I need the reference (it starts with CB-) and the last 4 digits of the phone number on the booking." |
+| Needs verification | "To look up your booking, please give the reference (it starts with CB-) and the last 4 digits of the phone number on the booking." |
 | Verification failed (limit) | "I couldn't match those details. I've asked a team member to help." |
 | Late cancellation | "Because it's within 24 hours, a team member will review the cancellation and any fee. You'll hear back here." |
 | Late reschedule | "Because it's within 24 hours, a team member will review the move and any fee. You'll hear back here." |
