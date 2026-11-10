@@ -271,11 +271,17 @@ body:has(.console) {
 }
 
 /* conversation detail */
+/* The decision panel is first in the page order (keyboard path) and on the right on wide screens. */
 .detail {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
+}
+
+.detail > :first-child {
+  grid-column: 3;
+  grid-row: 1;
 }
 
 .col {
@@ -557,16 +563,18 @@ button.danger {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  /* The decision panel comes first when the columns no longer fit side by side. */
-  .detail > :last-child {
+  .detail > :first-child {
     grid-column: 1 / -1;
-    grid-row: 1;
   }
 }
 
 @media (max-width: 700px) {
   .detail {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detail > :first-child {
+    grid-column: 1;
   }
 
   /* The queue table becomes stacked rows on a phone. */
@@ -593,7 +601,15 @@ button.danger {
     padding: 0.15rem 0.6rem;
   }
 
-  .table .num {
+  .table td.num {
     text-align: left;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    display: inline-block;
+    min-width: 5rem;
+    color: var(--ink-soft);
+    font-size: 0.8rem;
   }
 }

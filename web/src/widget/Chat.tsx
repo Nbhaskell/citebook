@@ -226,6 +226,8 @@ export function Chat({ headingLevel = 2 }: { headingLevel?: 1 | 2 }) {
     if (!clean || busy) return;
     setBusy(true);
     setDraft("");
+    // A chip that was pressed disappears; keep keyboard focus in the chat.
+    input.current?.focus();
     // Chips and earlier errors belong to the previous turn.
     setItems((current) => current.filter((item) => item.kind !== "slots" && item.kind !== "error"));
     add({ kind: "customer", text: clean });
@@ -281,6 +283,8 @@ export function Chat({ headingLevel = 2 }: { headingLevel?: 1 | 2 }) {
         receipt: receiptFor(card.action_type, result.outcome, result.booking_reference),
       });
     if (result.reply) add({ kind: "assistant", text: result.reply.text, tone: result.reply.kind });
+    // The Confirm button is gone; the receipt is announced, and typing can continue.
+    input.current?.focus();
   }
 
   async function cancelCard(card: CardOut) {

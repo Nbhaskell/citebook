@@ -13,7 +13,8 @@ export const TABS: { key: keyof Queue; label: string; empty: string }[] = [
 
 function reasonText(item: QueueItem): string {
   if (item.reason) return REASON_LABELS[item.reason] ?? item.reason;
-  if (item.action_type === "hold_create") return "New booking to confirm";
+  if (item.action_type === "hold_create" && item.status === "pending_staff")
+    return "New booking to confirm";
   return "—";
 }
 
@@ -94,20 +95,20 @@ export function QueueView({ tab, now }: { tab: keyof Queue; now: () => Date }) {
                 const status = STATUS_LABELS[item.status] ?? { word: item.status, icon: "question", tone: "neutral" };
                 return (
                   <tr key={item.action_id}>
-                    <td>
+                    <td data-label="Type">
                       <Badge word={type.word} icon={type.icon} />
                     </td>
-                    <td>
+                    <td data-label="Customer">
                       <a href={`#/conversation/${item.conversation_id}`}>
                         {item.customer_name ?? "Unknown customer"}
                       </a>
                       {item.booking_reference && <div className="ref">{item.booking_reference}</div>}
                     </td>
-                    <td>{item.visit ?? "—"}</td>
-                    <td className="num">{item.total ?? "—"}</td>
-                    <td>{age(item.created_at, now())}</td>
-                    <td>{reasonText(item)}</td>
-                    <td>
+                    <td data-label="Visit">{item.visit ?? "—"}</td>
+                    <td data-label="Total" className="num">{item.total ?? "—"}</td>
+                    <td data-label="Age">{age(item.created_at, now())}</td>
+                    <td data-label="Reason">{reasonText(item)}</td>
+                    <td data-label="Status">
                       <Badge word={status.word} icon={status.icon} tone={status.tone} />
                     </td>
                   </tr>

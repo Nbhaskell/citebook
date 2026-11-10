@@ -16,7 +16,11 @@ export function WidgetApp({ mode = "page" }: { mode?: "page" | "launcher" }) {
   const wasOpen = useRef(false);
 
   useEffect(() => {
-    if (open) panel.current?.querySelector<HTMLElement>("textarea")?.focus();
+    if (open) {
+      const log = panel.current?.querySelector<HTMLElement>(".chat-log");
+      if (log) log.scrollTop = log.scrollHeight;
+      panel.current?.querySelector<HTMLElement>("textarea")?.focus();
+    }
     else if (wasOpen.current) launcher.current?.focus();
     wasOpen.current = open;
   }, [open]);

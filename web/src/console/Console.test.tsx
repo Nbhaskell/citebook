@@ -162,6 +162,6 @@ describe("console", () => {
       fireEvent.click(await screen.findByRole("button", { name: "Approve hold" }));
     });
     expect(calls.find((call) => call.url.endsWith("/decide"))?.body).toMatchObject({ decision: "approve" });
-    expect(await screen.findByText(/Hold approved \(Approved\). A notification draft is in the outbox, not sent./)).toBeInTheDocument();
+    expect(await screen.findByText(/Hold approved. A notification draft is in the outbox, not sent./)).toBeInTheDocument();
   });
 });

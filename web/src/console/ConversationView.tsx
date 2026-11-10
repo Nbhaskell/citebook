@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   ApiFailure,
   staffApi,
@@ -228,12 +228,13 @@ function DecisionForm({
     try {
       const seconds = Math.round((Date.now() - openedAt) / 1000);
       const result = await staffApi.decide(action.action_id, decision, reason.trim(), seconds);
-      const word = STATUS_LABELS[result.action_status]?.word ?? result.action_status;
-      onDone(
-        decision === "approve"
-          ? `${label.word} approved (${word}). A notification draft is in the outbox, not sent.`
-          : `${label.word} rejected. A notification draft is in the outbox, not sent.`,
-      );
+      const done =
+        decision === "reject"
+          ? `${label.word} rejected.`
+          : action.action_type === "hold_create" && result.action_status === "executed"
+            ? "Hold approved: the booking is confirmed."
+            : `${label.word} approved.`;
+      onDone(`${done} A notification draft is in the outbox, not sent.`);
     } catch (failure) {
       setError(failure instanceof ApiFailure ? failure.message : "The decision was not saved.");
       setBusy(false);
@@ -350,8 +351,14 @@ function StaffMessage({ conversationId, onSent }: { conversationId: string; onSe
 
 function DecisionPanel({ detail, reload }: { detail: ConversationDetail; reload: () => void }) {
   const [notice, setNotice] = useState<string | null>(null);
+  const noticeBox = useRef<HTMLParagraphElement>(null);
+  // The decision buttons are gone after a decision; move focus to the result.
+  useEffect(() => {
+    if (notice) noticeBox.current?.focus();
+  }, [notice]);
   const [openedAt] = useState(() => Date.now());
   const pending = detail.actions.filter((action) => action.status === "pending_staff");
+  const earlier = detail.actions.filter((action) => action.status !== "pending_staff");
   const ended = detail.status === "closed" || detail.status === "abandoned";
 
   async function conversationStep(step: () => Promise<unknown>, done: string) {
@@ -367,7 +374,7 @@ function DecisionPanel({ detail, reload }: { detail: ConversationDetail; reload:
   return (
     <section className="col" aria-labelledby="decision-title">
       <h2 id="decision-title">Decision</h2>
-      <p className="notice" role="status">
+      <p className="notice" role="status" ref={noticeBox} tabIndex={-1}>
         {notice}
       </p>
       {detail.customer && (
@@ -426,16 +433,18 @@ function DecisionPanel({ detail, reload }: { detail: ConversationDetail; reload:
       {detail.status === "handed_off" && (
         <StaffMessage conversationId={detail.conversation_id} onSent={reload} />
       )}
-      <h3>Earlier actions</h3>
-      <ul className="history">
-        {detail.actions
-          .filter((action) => action.status !== "pending_staff")
-          .map((action) => (
-            <li key={action.action_id}>
-              {actionLabel(action).word}: {statusBadge(action.status)}
-            </li>
-          ))}
-      </ul>
+      {earlier.length > 0 && (
+        <>
+          <h3>Earlier actions</h3>
+          <ul className="history">
+            {earlier.map((action) => (
+              <li key={action.action_id}>
+                {actionLabel(action).word}: {statusBadge(action.status)}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </section>
   );
 }
@@ -465,9 +474,9 @@ export function ConversationView({ id }: { id: string }) {
         </button>
       </div>
       <div className="detail">
+        <DecisionPanel detail={detail} reload={reload} />
         <Transcript detail={detail} />
         <Activity detail={detail} />
-        <DecisionPanel detail={detail} reload={reload} />
       </div>
     </section>
   );

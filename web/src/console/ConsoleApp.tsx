@@ -35,19 +35,19 @@ const NAV: { view: Route["view"]; href: string; label: string }[] = [
 
 /** The API's clock can run ahead or behind real time (D-066); ages use the API's time. */
 function useApiNow(): () => Date {
-  const offset = useRef(0);
+  const [offset, setOffset] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
     fetchStatus(controller.signal).then(
       (result) => {
         if (result.kind === "ok" && result.status.now)
-          offset.current = new Date(result.status.now).getTime() - Date.now();
+          setOffset(new Date(result.status.now).getTime() - Date.now());
       },
       () => {},
     );
     return () => controller.abort();
   }, []);
-  return () => new Date(Date.now() + offset.current);
+  return () => new Date(Date.now() + offset);
 }
 
 export function ConsoleApp() {
