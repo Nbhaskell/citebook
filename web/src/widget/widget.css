@@ -1,0 +1,459 @@
+/* Customer widget (D-065): warm paper, ink text, one teal action colour, a receipt-like card. */
+
+.widget-page {
+  max-width: 40rem;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+}
+
+.widget-page .chat {
+  flex: 1;
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  background: var(--paper);
+}
+
+.chat-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.25rem 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.chat-title {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.chat-sub {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+}
+
+.chat-header-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  font-size: 0.875rem;
+}
+
+.chat-header-links button.link {
+  min-height: 44px;
+  font-size: 0.95rem;
+}
+
+.chat-emergency {
+  color: var(--emergency);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.chat-banner {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  background: var(--primary-soft);
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+}
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chat-welcome p {
+  margin-top: 0;
+}
+
+.msg {
+  max-width: 85%;
+  padding: 0.55rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+}
+
+.msg-who {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 0.15rem;
+}
+
+.msg-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.msg-customer {
+  align-self: flex-end;
+  background: var(--paper-deep);
+}
+
+.msg-assistant {
+  align-self: flex-start;
+  background: var(--surface);
+}
+
+.msg-staff {
+  align-self: flex-start;
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.msg-handoff,
+.msg-holding,
+.msg-fallback {
+  border-left: 4px solid var(--primary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--surface);
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.chip:hover:not(:disabled) {
+  background: var(--primary-soft);
+}
+
+.emergency {
+  border: 2px solid var(--emergency);
+  background: var(--emergency-soft);
+  border-radius: var(--radius);
+  padding: 0.75rem 0.9rem;
+}
+
+.emergency-title {
+  margin: 0 0 0.35rem;
+  color: var(--emergency);
+  font-weight: 700;
+}
+
+.emergency-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+  min-height: 44px;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-small);
+  background: var(--emergency);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* The confirmation card: a receipt, not a bubble. */
+.card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 0 0 var(--radius-small) var(--radius-small);
+  padding: 1rem 1rem 0.75rem;
+  margin-top: 6px;
+  box-shadow: var(--shadow);
+}
+
+.card::before {
+  /* Perforated top edge. */
+  content: "";
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  top: -6px;
+  height: 6px;
+  background: radial-gradient(circle at 5px 0, transparent 3px, var(--surface) 3.5px) -5px 0 / 10px 6px repeat-x;
+}
+
+.card-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.card-title:focus {
+  outline: none;
+}
+
+.card-title:focus-visible {
+  outline: 3px solid var(--focus);
+}
+
+.card-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px dashed var(--line-strong);
+  border-bottom: 1px dashed var(--line-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.card-rows li {
+  padding: 0.35rem 0;
+}
+
+.card-rows li + li {
+  border-top: 1px dotted var(--line);
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.card-actions button {
+  flex: 1;
+}
+
+.card-small,
+.card-note {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin: 0.5rem 0 0;
+}
+
+.card-note {
+  font-size: 0.9rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.card-expired,
+.card-cancelled,
+.card-replaced,
+.card-failed {
+  background: var(--paper-deep);
+  box-shadow: none;
+  color: var(--ink-soft);
+}
+
+.card-expired::before,
+.card-cancelled::before,
+.card-replaced::before,
+.card-failed::before {
+  background: radial-gradient(circle at 5px 0, transparent 3px, var(--paper-deep) 3.5px) -5px 0 / 10px 6px repeat-x;
+}
+
+.receipt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 0.75rem;
+}
+
+.receipt-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.receipt-ref strong {
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+
+/* Price table */
+.quote {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
+  padding: 0.75rem 0.9rem;
+  max-width: 24rem;
+}
+
+.quote table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.quote th {
+  text-align: left;
+  font-weight: 400;
+  padding: 0.2rem 0.5rem 0.2rem 0;
+}
+
+.quote td {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.quote tfoot th,
+.quote tfoot td {
+  font-weight: 700;
+  border-top: 1px solid var(--ink);
+  padding-top: 0.35rem;
+}
+
+.quote .credit {
+  color: var(--ok);
+}
+
+.quote-when,
+.quote-kind {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+}
+
+.quote-kind {
+  margin: 0.5rem 0 0.2rem;
+}
+
+.quote-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.chat-error {
+  border: 1px solid var(--bad);
+  background: var(--bad-soft);
+  border-radius: var(--radius-small);
+  padding: 0.5rem 0.75rem;
+}
+
+.chat-error p {
+  margin: 0 0 0.4rem;
+}
+
+.chat-typing {
+  min-height: 1.4em;
+  margin: 0;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.chat-form textarea {
+  flex: 1;
+  resize: none;
+}
+
+.chat-ended {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.chat-ended p {
+  margin: 0 0 0.5rem;
+}
+
+.chat-footer {
+  margin: 0;
+  padding: 0.4rem 1rem 0.6rem;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  background: var(--surface);
+}
+
+.icon {
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+
+/* Floating launcher and panel on the demo website. */
+.widget-launcher {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 20;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+
+.widget-panel {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 20;
+  width: 26rem;
+  height: min(42rem, calc(100vh - 2.5rem));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: var(--paper);
+}
+
+.widget-panel[hidden] {
+  display: none;
+}
+
+.widget-panel .chat {
+  flex: 1;
+}
+
+.widget-close {
+  align-self: flex-end;
+  border: none;
+  background: var(--surface);
+  font-size: 0.875rem;
+  width: 100%;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+
+@media (max-width: 479px) {
+  .widget-panel {
+    inset: 0;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    border: none;
+  }
+
+  .msg {
+    max-width: 92%;
+  }
+
+  .chat-header-links {
+    align-items: flex-start;
+  }
+}

@@ -14,7 +14,7 @@ afterEach(() => {
 describe("entry points", () => {
   it("widget carries the demo-data label", () => {
     render(<WidgetApp />);
-    expect(screen.getByRole("heading", { name: "Citebook widget" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Kestrel Hollow Plumbing" })).toBeInTheDocument();
     expect(screen.getByText("Demo: all details are invented. Don't enter real information.")).toBeInTheDocument();
   });
 

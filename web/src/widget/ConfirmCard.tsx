@@ -10,7 +10,8 @@ type Props = {
   card: CardOut;
   state: CardState;
   receipt?: Receipt;
-  focusOnMount: boolean;
+  /** Moves focus to the card title each time it changes to a new value above 0. */
+  focusKey: number;
   onConfirm: () => void;
   onCancel: () => void;
 };
@@ -23,12 +24,12 @@ const NOTES: Partial<Record<CardState, string>> = {
 };
 
 /** The confirmation card: built by code from the action's summary, never by the model. */
-export function ConfirmCard({ card, state, receipt, focusOnMount, onConfirm, onCancel }: Props) {
+export function ConfirmCard({ card, state, receipt, focusKey, onConfirm, onCancel }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   const [copied, setCopied] = useState(false);
   useEffect(() => {
-    if (focusOnMount) heading.current?.focus();
-  }, [focusOnMount]);
+    if (focusKey > 0) heading.current?.focus();
+  }, [focusKey]);
 
   const titleId = `card-${card.action_id}`;
   const closed = state !== "open" && state !== "busy";
