@@ -73,7 +73,7 @@ class RagProjectKB:
     """rag-project's `POST /api/search`: {"question", "k"} -> {"passages": [{source, section,
     text, distance}]}. No model call on that side."""
 
-    def __init__(self, base_url: str, timeout: float = 5.0, max_distance: float = 0.6) -> None:
+    def __init__(self, base_url: str, timeout: float = 5.0, max_distance: float = 0.475) -> None:
         self.url = base_url.rstrip("/") + "/api/search"
         self.timeout = timeout
         self.max_distance = max_distance
