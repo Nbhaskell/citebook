@@ -82,14 +82,13 @@ def draft(
     customer_id: str | None = None,
     **extra: str,
 ) -> str:
-    """Write one draft and return its id. A request without a booking names the customer only."""
+    """Write one draft and return its id. A request without a booking names the customer only,
+    and a request with no known customer greets "there"."""
     if booking_id is not None:
         fields = booking_fields(conn, clock, booking_id)
-    elif customer_id is not None:
-        name = conn.execute("SELECT name FROM customers WHERE id = ?", (customer_id,)).fetchone()
-        fields = {"name": name["name"]}
     else:
-        raise ValueError("a draft needs a booking or a customer")
+        row = conn.execute("SELECT name FROM customers WHERE id = ?", (customer_id,)).fetchone()
+        fields = {"name": row["name"] if row else "there"}
     fields.update(extra)
     if kind is OutboxKind.REQUEST_RECEIVED:
         fields.setdefault("about", f" for booking {fields['reference']}" if booking_id else "")
