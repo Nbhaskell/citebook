@@ -75,6 +75,7 @@ def test_settings_hold_the_documented_keys() -> None:
         "max_reschedules",
         "zip_areas",
         "verification_max_attempts",
+        "conversation_idle_minutes",
         "synthetic_data",
     }
     assert settings["arrival_window_minutes"] == 120

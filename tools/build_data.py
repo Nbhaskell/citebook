@@ -138,6 +138,7 @@ def build_settings(facts: dict[str, Any], ext: dict[str, Any]) -> dict[str, Any]
         "max_reschedules": policies["max_reschedules"],
         "zip_areas": without_comments(ext["zip_areas"]),
         "verification_max_attempts": policies["verification_max_attempts"],
+        "conversation_idle_minutes": policies["conversation_idle_minutes"],
         "synthetic_data": True,
     }
 

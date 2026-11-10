@@ -174,3 +174,6 @@ Whether a reschedule or cancellation is late (less than `free_cancel_hours` befo
 
 ### D-049. Database seed
 `python -m tools.seed_db --fresh` migrates `CITEBOOK_DB_PATH` and loads settings, services, technicians, customers, the calendar and the seeded bookings. Each seeded booking gets a quote computed by `citebook/pricing.py`, with no conversation (D-042) and an id derived from its reference. The tool refuses to seed a database that already holds slots. Tests load the same seed into an in-memory database.
+
+### D-050. Expiry details
+`expire_due(now)` expires open proposals, unconfirmed holds and idle conversations in one idempotent transaction. Quotes have no status column: a quote is expired once `expires_at` has passed, and the gate refuses it then. An `active` or `awaiting_confirmation` conversation with no activity for `conversation_idle_minutes` (60) becomes `abandoned`, and its open proposal expires. A handed-off conversation never expires, because it waits for staff. Migration files never change once they are on `main`, so the new setting is described in prose in schema section 3, not in the SQL block that the first migration copies.

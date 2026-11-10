@@ -18,7 +18,8 @@
     "staff_confirm_typical_business_hours": 2,
     "quote_ttl_minutes": 30,
     "max_reschedules": 2,
-    "verification_max_attempts": 3
+    "verification_max_attempts": 3,
+    "conversation_idle_minutes": 60
   },
 
   "zip_areas": {

@@ -108,7 +108,7 @@ def check_transition(table: dict[Any, set[Any]], current: Any, target: Any) -> N
 # --- low-level moves --------------------------------------------------------------------------
 
 
-def _set_action(
+def set_action_status(
     conn: sqlite3.Connection,
     action_id: str,
     current: ActionStatus,
@@ -194,7 +194,7 @@ def _set_conversation(
     )
 
 
-def _settle_conversation(conn: sqlite3.Connection, conversation_id: str, now: datetime) -> None:
+def settle_conversation(conn: sqlite3.Connection, conversation_id: str, now: datetime) -> None:
     """Back to `active` when no proposal is open, unless staff or the clock ended it."""
     status = conn.execute(
         "SELECT status FROM conversations WHERE id = ?", (conversation_id,)
@@ -214,7 +214,7 @@ def _withdraw_open(conn: sqlite3.Connection, conversation_id: str, now: datetime
         "SELECT id FROM actions WHERE conversation_id = ? AND status = 'proposed'",
         (conversation_id,),
     ).fetchall():
-        _set_action(conn, row["id"], S.PROPOSED, S.WITHDRAWN, now)
+        set_action_status(conn, row["id"], S.PROPOSED, S.WITHDRAWN, now)
         audit(
             conn,
             Actor.SYSTEM,
@@ -296,7 +296,7 @@ def withdraw(conn: sqlite3.Connection, action_id: str, conversation_id: str, now
         row = _action(conn, action_id)
         if row is None or row["conversation_id"] != conversation_id or row["status"] != "proposed":
             return False
-        _set_action(conn, action_id, S.PROPOSED, S.WITHDRAWN, now)
+        set_action_status(conn, action_id, S.PROPOSED, S.WITHDRAWN, now)
         audit(
             conn,
             Actor.CUSTOMER,
@@ -304,7 +304,7 @@ def withdraw(conn: sqlite3.Connection, action_id: str, conversation_id: str, now
             conversation_id=conversation_id,
             action_id=action_id,
         )
-        _settle_conversation(conn, conversation_id, now)
+        settle_conversation(conn, conversation_id, now)
     return True
 
 
@@ -374,13 +374,13 @@ def confirm(
         if row["status"] != S.PROPOSED:
             return ConfirmResult("NOT_PROPOSED", action_id)
         if row["expires_at"] and parse_utc(row["expires_at"]) <= now:
-            _set_action(conn, action_id, S.PROPOSED, S.EXPIRED, now)
-            _settle_conversation(conn, conversation_id, now)
+            set_action_status(conn, action_id, S.PROPOSED, S.EXPIRED, now)
+            settle_conversation(conn, conversation_id, now)
             return ConfirmResult("EXPIRED", action_id)
         if not hmac.compare_digest(row["payload_hash"], presented_hash):
             return ConfirmResult("HASH_MISMATCH", action_id)
 
-        _set_action(
+        set_action_status(
             conn,
             action_id,
             S.PROPOSED,
@@ -396,7 +396,7 @@ def confirm(
             action_id=action_id,
         )
         result = _route(conn, rules, row, now)
-        _settle_conversation(conn, conversation_id, now)
+        settle_conversation(conn, conversation_id, now)
     return result
 
 
@@ -415,7 +415,9 @@ def _to_staff(
     reason: EscalationReason,
     now: datetime,
 ) -> ConfirmResult:
-    _set_action(conn, row["id"], current, S.PENDING_STAFF, now, escalation_reason=reason.value)
+    set_action_status(
+        conn, row["id"], current, S.PENDING_STAFF, now, escalation_reason=reason.value
+    )
     _outbox(
         conn,
         row["booking_id"],
@@ -467,7 +469,7 @@ def _attempt(
     except SlotTaken:
         conn.execute("ROLLBACK TO execute_action")
         conn.execute("RELEASE execute_action")
-        _set_action(conn, row["id"], current, S.FAILED, now, failure_detail="slot_taken")
+        set_action_status(conn, row["id"], current, S.FAILED, now, failure_detail="slot_taken")
         audit(
             conn,
             Actor.SYSTEM,
@@ -529,7 +531,9 @@ def _execute_hold(
             stamp,
         ),
     )
-    _set_action(conn, row["id"], S.CUSTOMER_CONFIRMED, S.PENDING_STAFF, now, booking_id=booking_id)
+    set_action_status(
+        conn, row["id"], S.CUSTOMER_CONFIRMED, S.PENDING_STAFF, now, booking_id=booking_id
+    )
     _outbox(
         conn,
         booking_id,
@@ -583,7 +587,7 @@ def _executed(
         " AND status IN ('customer_confirmed', 'approved')",
         (booking_id,),
     ).fetchone()
-    _set_action(
+    set_action_status(
         conn, row["id"], ActionStatus(row["status"]), S.EXECUTED, now, executed_at=to_utc_text(now)
     )
     reference = conn.execute(
@@ -650,9 +654,9 @@ def decide(
         )
         kind = ActionType(row["action_type"])
         if decision is StaffDecision.REJECT:
-            _set_action(conn, action_id, S.PENDING_STAFF, S.REJECTED, now)
+            set_action_status(conn, action_id, S.PENDING_STAFF, S.REJECTED, now)
             if kind is ActionType.HOLD_CREATE:
-                _release_hold(
+                release_hold(
                     conn,
                     rules,
                     row["booking_id"],
@@ -662,9 +666,11 @@ def decide(
                 )
             return ConfirmResult(S.REJECTED.value, action_id)
 
-        _set_action(conn, action_id, S.PENDING_STAFF, S.APPROVED, now)
+        set_action_status(conn, action_id, S.PENDING_STAFF, S.APPROVED, now)
         if kind in {ActionType.REFUND_REQUEST, ActionType.POLICY_EXCEPTION}:
-            _set_action(conn, action_id, S.APPROVED, S.EXECUTED, now, executed_at=to_utc_text(now))
+            set_action_status(
+                conn, action_id, S.APPROVED, S.EXECUTED, now, executed_at=to_utc_text(now)
+            )
             return ConfirmResult(S.EXECUTED.value, action_id)
         booking = conn.execute(
             "SELECT * FROM bookings WHERE id = ?", (row["booking_id"],)
@@ -694,7 +700,7 @@ def _confirm_hold(
     return _executed(conn, booking["id"], OutboxKind.BOOKING_CONFIRMED, now)
 
 
-def _release_hold(
+def release_hold(
     conn: sqlite3.Connection,
     rules: Rules,
     booking_id: str,
@@ -730,7 +736,7 @@ def _staff_control(
             " AND status = 'pending_staff'",
             (conversation_id,),
         ).fetchall():
-            _set_action(
+            set_action_status(
                 conn, row["id"], S.PENDING_STAFF, S.EXECUTED, now, executed_at=to_utc_text(now)
             )
         conn.execute(

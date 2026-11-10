@@ -293,6 +293,8 @@ CREATE TABLE audit_events (
 );
 ```
 
+`settings` also holds `conversation_idle_minutes`: how long an `active` or `awaiting_confirmation` conversation may be idle before it becomes `abandoned`.
+
 Indexes on `slots(status, starts_at)`, `bookings(customer_id)`, `bookings(reference)`, `actions(status)`, `tool_calls(conversation_id, turn)`, `messages(conversation_id, seq)`.
 
 ## 4. State machines

@@ -65,5 +65,6 @@
     }
   },
   "verification_max_attempts": 3,
+  "conversation_idle_minutes": 60,
   "synthetic_data": true
 }
