@@ -96,3 +96,11 @@ rag-project's figure counts attempts resisted (32 of 45, about 29% attack succes
 
 ### D-027. Line endings: LF
 `.gitattributes` sets `* text=auto eol=lf` so Windows checkouts and the Linux CI runner agree and ruff's formatter does not report line-ending differences.
+
+### D-028. Python dependencies are pinned in two requirements files
+`requirements.txt` holds runtime dependencies and `requirements-dev.txt` adds test and lint tools (`-r requirements.txt` plus pytest, ruff, mypy, httpx2), the same layout as Citetally. Both list every package, including transitive ones, at exact versions (a `pip freeze`), so installs are reproducible. No extra lock tool. Phase 0 installs only what Phase 0 uses. FastAPI's test client uses `httpx2` (BSD-3-Clause), which Starlette now recommends over `httpx` and which avoids `certifi` (MPL-2.0).
+
+Type checking is `mypy --strict` with the pydantic plugin. Lint and format are `ruff` (rules `E, F, I, B, UP, SIM, RUF`, line length 100), which skips `docs/` and `web/` because recent ruff versions also format Markdown code blocks and the planning documents should not be rewritten by a formatter.
+
+### D-029. License check of the Python dependencies
+Every installed package was checked with a metadata-reading script on 2026-11-09: 32 packages, all MIT, BSD, Apache-2.0 or PSF, with one exception: `pathspec` 1.1.1 (MPL-2.0, weak file-level copyleft), pulled in by `mypy`. It is development-only, unmodified and not redistributed, so it does not affect the MIT license of this repository. Citetally accepted the same package on the same grounds. **Provisional** until confirmed for this repository. No AGPL or GPL.
