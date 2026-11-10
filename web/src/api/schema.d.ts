@@ -294,7 +294,7 @@ export interface components {
             /** First Day */
             first_day: string;
             /** Slots */
-            slots: components["schemas"]["SlotOut"][];
+            slots: components["schemas"]["citebook__staff_api__SlotOut"][];
             /** Technicians */
             technicians: components["schemas"]["TechnicianOut"][];
         };
@@ -522,33 +522,25 @@ export interface components {
             /** Visit */
             visit: string | null;
         };
+        /** QuoteOut */
+        QuoteOut: {
+            /** Is Estimate */
+            is_estimate: boolean;
+            /** Lines */
+            lines: string[][];
+            /** Note */
+            note: string;
+            /** Total */
+            total: string;
+            /** When */
+            when: string | null;
+        };
         /** ReplyOut */
         ReplyOut: {
             /** Kind */
             kind: string;
             /** Text */
             text: string;
-        };
-        /** SlotOut */
-        SlotOut: {
-            /** Booking Reference */
-            booking_reference: string | null;
-            /** Ends At */
-            ends_at: string;
-            /** Hold Expires At */
-            hold_expires_at: string | null;
-            /** Label */
-            label: string;
-            /** Service */
-            service: string | null;
-            /** Slot Id */
-            slot_id: string;
-            /** Starts At */
-            starts_at: string;
-            /** Status */
-            status: string;
-            /** Technician Id */
-            technician_id: string;
         };
         /** StaffMessageIn */
         StaffMessageIn: {
@@ -624,10 +616,44 @@ export interface components {
         /** TurnOut */
         TurnOut: {
             card: components["schemas"]["CardOut"] | null;
+            quote?: components["schemas"]["QuoteOut"] | null;
             /** Replies */
             replies: components["schemas"]["ReplyOut"][];
+            /**
+             * Slots
+             * @default []
+             */
+            slots: components["schemas"]["citebook__api__SlotOut"][];
             /** Status */
             status: string;
+        };
+        /** SlotOut */
+        citebook__api__SlotOut: {
+            /** Slot Id */
+            slot_id: string;
+            /** When */
+            when: string;
+        };
+        /** SlotOut */
+        citebook__staff_api__SlotOut: {
+            /** Booking Reference */
+            booking_reference: string | null;
+            /** Ends At */
+            ends_at: string;
+            /** Hold Expires At */
+            hold_expires_at: string | null;
+            /** Label */
+            label: string;
+            /** Service */
+            service: string | null;
+            /** Slot Id */
+            slot_id: string;
+            /** Starts At */
+            starts_at: string;
+            /** Status */
+            status: string;
+            /** Technician Id */
+            technician_id: string;
         };
     };
     responses: never;

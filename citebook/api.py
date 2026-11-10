@@ -89,9 +89,24 @@ class CardOut(BaseModel):
     expires_at: str | None
 
 
+class SlotOut(BaseModel):
+    slot_id: str
+    when: str
+
+
+class QuoteOut(BaseModel):
+    lines: list[list[str]]
+    total: str
+    is_estimate: bool
+    note: str
+    when: str | None
+
+
 class TurnOut(BaseModel):
     replies: list[ReplyOut]
     card: CardOut | None
+    slots: list[SlotOut] = []
+    quote: QuoteOut | None = None
     status: str
 
 
@@ -384,6 +399,8 @@ def create_app(
         return TurnOut(
             replies=[ReplyOut(kind=r.kind, text=r.text) for r in result.replies],
             card=CardOut(**result.card.__dict__) if result.card else None,
+            slots=[SlotOut(slot_id=s.slot_id, when=s.when) for s in result.slots],
+            quote=QuoteOut(**result.quote.__dict__) if result.quote else None,
             status=result.status,
         )
 

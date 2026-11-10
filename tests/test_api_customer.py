@@ -119,6 +119,8 @@ def test_a_message_returns_replies(world: World) -> None:
     assert response.json() == {
         "replies": [{"kind": "text", "text": "Hi! How can I help?"}],
         "card": None,
+        "slots": [],
+        "quote": None,
         "status": "active",
     }
 
@@ -246,3 +248,38 @@ def test_an_ended_conversation_is_refused(world: World) -> None:
     )
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "CONVERSATION_ENDED"
+
+
+def test_times_and_prices_come_back_built_from_tool_results(world: World) -> None:
+    conversation, headers = world.start()
+    body = world.say(
+        conversation,
+        headers,
+        "Drain cleaning Thursday, 00012",
+        use(
+            "check_availability",
+            service_code="DRAIN_CLEANING",
+            date_from="2026-11-12",
+            date_to="2026-11-12",
+            zip_code="00012",
+        ),
+        _pick_slot,
+        _quote_text,
+    ).json()
+    assert body["slots"] and all(s["when"].startswith("Thu 12 Nov, arrival") for s in body["slots"])
+    assert body["quote"]["total"] == "$149.00" and body["quote"]["is_estimate"] is True
+    assert body["quote"]["lines"][0] == ["Call-out fee", "$89.00"]
+    assert body["quote"]["when"].startswith("Thursday 12 November, arrival")
+
+
+def test_no_chips_or_prices_beside_a_fallback(world: World) -> None:
+    conversation, headers = world.start()
+    body = world.say(
+        conversation,
+        headers,
+        "How much for a drain in 00012?",
+        use("quote_price", service_code="DRAIN_CLEANING", zip_code="00012"),
+        say("It is $129.00."),
+        say("It is $129.00."),
+    ).json()
+    assert body["replies"][0]["kind"] == "fallback" and body["quote"] is None

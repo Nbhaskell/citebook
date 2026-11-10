@@ -118,10 +118,27 @@ class Card:
     expires_at: str | None
 
 
+@dataclass(frozen=True)
+class Quote:
+    lines: list[list[str]]
+    total: str
+    is_estimate: bool
+    note: str
+    when: str | None
+
+
+@dataclass(frozen=True)
+class SlotChoice:
+    slot_id: str
+    when: str
+
+
 @dataclass
 class TurnResult:
     replies: list[Reply] = field(default_factory=list)
     card: Card | None = None
+    slots: list[SlotChoice] = field(default_factory=list)  # from check_availability, for chips
+    quote: Quote | None = None  # from quote_price, rendered by the widget as a table
     status: str = ConversationStatus.ACTIVE.value
 
 
@@ -432,10 +449,14 @@ class _Turn:
         ).fetchone()[0]
         self.used = self.refusals = 0
         self.card_actions: list[str] = []
+        self.slots: list[SlotChoice] = []
+        self.quote: Quote | None = None
         draft = self.tool_loop(messages)
         if draft is None:
             return self.finish()
         if self.checked_reply(draft, messages, state) == "text":
+            # Shown only beside a reply that passed its checks; never with a fallback.
+            self.result.slots, self.result.quote = self.slots, self.quote
             for action_id in reversed(self.card_actions):
                 card = _card(self.conn, action_id)
                 if card is not None:
@@ -505,6 +526,16 @@ class _Turn:
             return False
         if envelope["ok"] and data.get("card") == "shown":
             self.card_actions.append(data["action_id"])
+        if envelope["ok"] and name == ToolName.CHECK_AVAILABILITY:
+            self.slots = [SlotChoice(s["slot_id"], s["when"]) for s in data.get("slots", [])]
+        if envelope["ok"] and name == ToolName.QUOTE_PRICE:
+            self.quote = Quote(
+                lines=data["lines"],
+                total=data["total"],
+                is_estimate=data["is_estimate"],
+                note=data["note"],
+                when=data.get("when"),
+            )
         return True
 
     def checked_reply(self, draft: str, messages: list[Message], state: str) -> str:
