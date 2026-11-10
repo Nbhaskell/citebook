@@ -15,7 +15,8 @@ from citebook.money import format_money
 from citebook.timeutil import BusinessClock, format_arrival, parse_utc
 from citebook.tools.base import Block, ToolContext, ToolOutput, blocked, invalid
 
-PRICE_BOOK_PATH = Path(__file__).resolve().parent.parent.parent / "db" / "seed" / "price_book.json"
+SEED_DIR = Path(__file__).resolve().parent.parent.parent / "db" / "seed"
+PRICE_BOOK_PATH = SEED_DIR / "price_book.json"
 
 SAY_UNKNOWN_SERVICE = "Unknown service_code. Call list_services and use one of its codes."
 SAY_UNKNOWN_SLOT = "Unknown slot_id. Use a slot_id from check_availability."
@@ -46,6 +47,13 @@ def load_settings(conn: sqlite3.Connection) -> dict[str, Any]:
 def price_book() -> dict[str, Any]:
     book: dict[str, Any] = json.loads(PRICE_BOOK_PATH.read_text(encoding="utf-8"))
     return book
+
+
+@cache
+def safety() -> dict[str, Any]:
+    """The published safety advice and emergency line (from facts.json via build_data)."""
+    data: dict[str, Any] = json.loads((SEED_DIR / "safety.json").read_text(encoding="utf-8"))
+    return data
 
 
 def service(conn: sqlite3.Connection, code: str) -> sqlite3.Row | None:

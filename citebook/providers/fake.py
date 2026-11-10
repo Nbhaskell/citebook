@@ -42,5 +42,5 @@ def say(text: str) -> ModelTurn:
     return ModelTurn(text=text)
 
 
-def use(name: str, **arguments: Any) -> ModelTurn:
-    return ModelTurn(tool_calls=[ToolCall(name, arguments)])
+def use(tool: str, /, **arguments: Any) -> ModelTurn:
+    return ModelTurn(tool_calls=[ToolCall(tool, arguments)])

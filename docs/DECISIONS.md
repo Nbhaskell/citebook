@@ -237,3 +237,15 @@ Each tool is one module in `citebook/tools/` with a `SPEC`: name, kind, requirem
 - `SCOPE` fails a sentence that names gas or electrical parts together with an instruction ("turn off the breaker", "try relighting the pilot light"), except the business's published safety advice. Plumbing diagnosis beyond the passages is not detected in v1; the scenario suite measures it.
 
 When a draft fails, the model gets one regeneration with the failed check codes, a hint for each and the unmatched values from its own draft.
+
+### D-061. Turn-loop details
+`citebook/loop.py` follows TRD section 4. Choices the documents leave open:
+
+- History is the last 40 stored messages. Each tool exchange is stored as a `tool` message holding the tool name, the arguments the model proposed and the envelope it got back, so later turns still see earlier slot ids and quote ids. On replay it becomes the assistant's tool call followed by the result in a `BEGIN DATA` / `END DATA` block. Staff messages are replayed with a "Team member:" prefix.
+- After `max_tool_calls` (6) calls in one customer message the model is called again with no tools, so it must answer in text. Three refusals in a row hand the conversation to staff with fixed copy (`REPEATED_GATE_BLOCKS`). Only gate refusals count; an allowed call resets the count.
+- A successful `handoff_to_staff` ends the turn with fixed copy instead of model text, and a `verify_customer` result that reaches the attempt limit ends it with the fixed verification-limit copy and a `VERIFICATION_FAILED` handoff.
+- A model call that fails is retried once; a second failure sends the fixed fallback and a `MODEL_UNAVAILABLE` handoff. An empty draft is treated like a failed draft and written again once.
+- The regeneration after a failed reply check is offered no tools. Both attempts' check results are stored against the message the customer finally sees (the corrected reply or the fallback); the failed draft itself is not shown to anyone.
+- A customer message in a handed-off conversation gets a fixed holding message with no model call. A closed or abandoned conversation takes no messages.
+- With `no_screening`, flags other than `EMERGENCY` are not recorded; sensitive numbers are still masked, because masking protects the customer, not the assistant. `baseline` and `no_least_privilege` offer every tool; `baseline` and `no_reply_checks` send the draft unchecked; `no_data_marking` sends tool results as plain JSON without `untrusted_fields`.
+- `CITEBOOK_KB` chooses `fake` (default) or `rag_project`, because rag-project's retrieval endpoint does not exist yet (D-055).
