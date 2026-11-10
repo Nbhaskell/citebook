@@ -105,7 +105,7 @@
           },
           "slots": {
             "items": {
-              "$ref": "#/components/schemas/citebook__staff_api__SlotOut"
+              "$ref": "#/components/schemas/CalendarSlot"
             },
             "title": "Slots",
             "type": "array"
@@ -125,6 +125,80 @@
           "slots"
         ],
         "title": "Calendar",
+        "type": "object"
+      },
+      "CalendarSlot": {
+        "properties": {
+          "booking_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Reference"
+          },
+          "ends_at": {
+            "title": "Ends At",
+            "type": "string"
+          },
+          "hold_expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Expires At"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "service": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service"
+          },
+          "slot_id": {
+            "title": "Slot Id",
+            "type": "string"
+          },
+          "starts_at": {
+            "title": "Starts At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "technician_id": {
+            "title": "Technician Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slot_id",
+          "technician_id",
+          "starts_at",
+          "ends_at",
+          "label",
+          "status",
+          "booking_reference",
+          "service",
+          "hold_expires_at"
+        ],
+        "title": "CalendarSlot",
         "type": "object"
       },
       "CancelOut": {
@@ -878,6 +952,24 @@
         "title": "ReplyOut",
         "type": "object"
       },
+      "SlotOut": {
+        "properties": {
+          "slot_id": {
+            "title": "Slot Id",
+            "type": "string"
+          },
+          "when": {
+            "title": "When",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slot_id",
+          "when"
+        ],
+        "title": "SlotOut",
+        "type": "object"
+      },
       "StaffMessageIn": {
         "properties": {
           "text": {
@@ -1122,7 +1214,7 @@
           "slots": {
             "default": [],
             "items": {
-              "$ref": "#/components/schemas/citebook__api__SlotOut"
+              "$ref": "#/components/schemas/SlotOut"
             },
             "title": "Slots",
             "type": "array"
@@ -1138,98 +1230,6 @@
           "status"
         ],
         "title": "TurnOut",
-        "type": "object"
-      },
-      "citebook__api__SlotOut": {
-        "properties": {
-          "slot_id": {
-            "title": "Slot Id",
-            "type": "string"
-          },
-          "when": {
-            "title": "When",
-            "type": "string"
-          }
-        },
-        "required": [
-          "slot_id",
-          "when"
-        ],
-        "title": "SlotOut",
-        "type": "object"
-      },
-      "citebook__staff_api__SlotOut": {
-        "properties": {
-          "booking_reference": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Booking Reference"
-          },
-          "ends_at": {
-            "title": "Ends At",
-            "type": "string"
-          },
-          "hold_expires_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Hold Expires At"
-          },
-          "label": {
-            "title": "Label",
-            "type": "string"
-          },
-          "service": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Service"
-          },
-          "slot_id": {
-            "title": "Slot Id",
-            "type": "string"
-          },
-          "starts_at": {
-            "title": "Starts At",
-            "type": "string"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          },
-          "technician_id": {
-            "title": "Technician Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "slot_id",
-          "technician_id",
-          "starts_at",
-          "ends_at",
-          "label",
-          "status",
-          "booking_reference",
-          "service",
-          "hold_expires_at"
-        ],
-        "title": "SlotOut",
         "type": "object"
       }
     }

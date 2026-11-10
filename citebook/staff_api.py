@@ -144,7 +144,7 @@ class StaffMessageIn(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
 
 
-class SlotOut(BaseModel):
+class CalendarSlot(BaseModel):
     slot_id: str
     technician_id: str
     starts_at: str
@@ -165,7 +165,7 @@ class Calendar(BaseModel):
     first_day: str
     days: int
     technicians: list[TechnicianOut]
-    slots: list[SlotOut]
+    slots: list[CalendarSlot]
 
 
 class DraftOut(BaseModel):
@@ -465,7 +465,7 @@ def calendar(
     ):
         booking = booked.get(row["id"])
         slots.append(
-            SlotOut(
+            CalendarSlot(
                 slot_id=row["id"],
                 technician_id=row["technician_id"],
                 starts_at=row["starts_at"],

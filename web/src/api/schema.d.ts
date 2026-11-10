@@ -294,9 +294,30 @@ export interface components {
             /** First Day */
             first_day: string;
             /** Slots */
-            slots: components["schemas"]["citebook__staff_api__SlotOut"][];
+            slots: components["schemas"]["CalendarSlot"][];
             /** Technicians */
             technicians: components["schemas"]["TechnicianOut"][];
+        };
+        /** CalendarSlot */
+        CalendarSlot: {
+            /** Booking Reference */
+            booking_reference: string | null;
+            /** Ends At */
+            ends_at: string;
+            /** Hold Expires At */
+            hold_expires_at: string | null;
+            /** Label */
+            label: string;
+            /** Service */
+            service: string | null;
+            /** Slot Id */
+            slot_id: string;
+            /** Starts At */
+            starts_at: string;
+            /** Status */
+            status: string;
+            /** Technician Id */
+            technician_id: string;
         };
         /** CancelOut */
         CancelOut: {
@@ -542,6 +563,13 @@ export interface components {
             /** Text */
             text: string;
         };
+        /** SlotOut */
+        SlotOut: {
+            /** Slot Id */
+            slot_id: string;
+            /** When */
+            when: string;
+        };
         /** StaffMessageIn */
         StaffMessageIn: {
             /** Text */
@@ -623,37 +651,9 @@ export interface components {
              * Slots
              * @default []
              */
-            slots: components["schemas"]["citebook__api__SlotOut"][];
+            slots: components["schemas"]["SlotOut"][];
             /** Status */
             status: string;
-        };
-        /** SlotOut */
-        citebook__api__SlotOut: {
-            /** Slot Id */
-            slot_id: string;
-            /** When */
-            when: string;
-        };
-        /** SlotOut */
-        citebook__staff_api__SlotOut: {
-            /** Booking Reference */
-            booking_reference: string | null;
-            /** Ends At */
-            ends_at: string;
-            /** Hold Expires At */
-            hold_expires_at: string | null;
-            /** Label */
-            label: string;
-            /** Service */
-            service: string | null;
-            /** Slot Id */
-            slot_id: string;
-            /** Starts At */
-            starts_at: string;
-            /** Status */
-            status: string;
-            /** Technician Id */
-            technician_id: string;
         };
     };
     responses: never;

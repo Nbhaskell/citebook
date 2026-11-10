@@ -10,6 +10,7 @@ const ok: Status = {
   model: "qwen3:8b",
   synthetic_data: true,
   ablation: "none",
+  kb: "fake",
   model_reachable: null,
   kb_reachable: null,
   database: null,
