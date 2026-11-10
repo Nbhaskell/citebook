@@ -1,0 +1,115 @@
+{
+  "components": {
+    "schemas": {
+      "Status": {
+        "description": "What the service can say about itself. `None` means \"not checked yet\": the parts that\nwould be checked (model, knowledge base, database) are built in later phases.",
+        "properties": {
+          "ablation": {
+            "enum": [
+              "none",
+              "baseline",
+              "no_least_privilege",
+              "no_gate_policy",
+              "no_data_marking",
+              "no_reply_checks",
+              "no_screening"
+            ],
+            "title": "Ablation",
+            "type": "string"
+          },
+          "database": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Database"
+          },
+          "kb_reachable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kb Reachable"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "model_reachable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Reachable"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          },
+          "synthetic_data": {
+            "title": "Synthetic Data",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service",
+          "version",
+          "provider",
+          "model",
+          "synthetic_data",
+          "ablation",
+          "model_reachable",
+          "kb_reachable",
+          "database"
+        ],
+        "title": "Status",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Citebook API",
+    "version": "0.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/status": {
+      "get": {
+        "operationId": "status_api_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Status"
+      }
+    }
+  }
+}

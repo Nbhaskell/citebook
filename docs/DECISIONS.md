@@ -112,3 +112,11 @@ The server's bind address is a constant, not a setting: `python -m citebook` alw
 
 ### D-031. `/api/status` reports only what exists
 The status response names the service, version, provider, model, synthetic-data flag and the ablation in force. `model_reachable`, `kb_reachable` and `database` are `null` ("not checked yet") until the phases that build those parts, so the page never shows a green check for something unchecked.
+
+### D-032. Web setup: one Vite project, two entry points, generated API types
+`web/` is a hand-written Vite + React + TypeScript project (no template generator) with two pages: `/widget/` (customer widget) and `/console/` (staff console), plus a plain index page linking both in development. Shared code lives in `web/src/shared/`. The dev server runs on `127.0.0.1:5176` and proxies `/api` to `127.0.0.1:8300`, so the API needs no CORS settings. Versions are pinned exactly and `package-lock.json` is committed. TypeScript is held at 5.9.3: 7.x is outside the peer ranges of `typescript-eslint` (`<6.1`) and `openapi-typescript` (`^5.x`).
+
+API types are generated: `python -m tools.export_openapi` writes `web/openapi.json`, `npm run gen:api` writes `web/src/api/schema.d.ts`, both are committed, and a pytest test fails when `openapi.json` no longer matches the app. Both pages show the demo-data label from `docs/UI_UX_DESIGN_BRIEF.md` and a banner when an evaluation ablation is in force. All server text is rendered as text.
+
+### D-033. License check of the npm packages
+237 packages checked on 2026-11-09. All are MIT, Apache-2.0, ISC, BSD, BlueOak or Python-2.0, with three exceptions, all build-time only and not shipped as source: `lightningcss` and its Windows binary (MPL-2.0, a Vite dependency) and `caniuse-lite` (CC-BY-4.0 browser data). Citetally accepted the same packages on the same grounds. **Provisional** until confirmed for this repository.
