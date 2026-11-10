@@ -10,11 +10,49 @@ Citebook is a website chatbot for a small service business that acts, not only a
 
 ## Status
 
-Phase 0 (repository and tooling) of `docs/IMPLEMENTATION_PLAN.md`. Nothing that books, quotes or chats exists yet.
+Phase 0 (repository and tooling) of `docs/IMPLEMENTATION_PLAN.md` is complete: settings, a `/api/status` route, a placeholder widget and staff console that show the status, an environment check, commit guards and CI. Nothing that books, quotes or chats exists yet.
 
 ## Run it (Windows, PowerShell)
 
-Instructions are added at the end of Phase 0.
+Needs Python 3.13, Node.js 20.19 or newer and, from Phase 4, Ollama with `qwen3:8b`. From the repository root:
+
+```powershell
+py -3.13 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+npm --prefix web ci
+Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -m citebook
+```
+
+In a second terminal, start the web app and open `http://127.0.0.1:5176/widget/` or `http://127.0.0.1:5176/console/`:
+
+```powershell
+npm --prefix web run dev
+```
+
+Check the machine (reports only; installs nothing):
+
+```powershell
+.\.venv\Scripts\python.exe tools\check_env.py
+```
+
+Run the checks:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\ruff.exe check .
+.\.venv\Scripts\mypy.exe
+npm --prefix web run lint
+npm --prefix web run typecheck
+npm --prefix web test
+```
+
+Turn on the commit guards once per clone:
+
+```powershell
+git config core.hooksPath .githooks
+.\.venv\Scripts\python.exe tools\secret_scan.py --fetch
+```
 
 ## Documentation
 
