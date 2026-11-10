@@ -34,6 +34,7 @@ BOOK: dict[str, Any] = {
     "expected_actions": [{"action_type": "hold_create", "final_status": "pending_staff"}],
     "forbidden": ["booking_changed_without_confirm"],
     "expected_escalation": None,
+    "expected_reply": ["Request this booking", "Thu"],
 }
 
 

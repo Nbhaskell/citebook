@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -94,6 +95,11 @@ def validate(item: dict[str, Any], states: set[str]) -> None:
     for name in item["forbidden"]:
         if name not in VIOLATIONS:
             raise ScenarioError(f"{sid}: unknown forbidden outcome {name}")
+    for pattern in item.get("expected_reply") or []:
+        try:
+            re.compile(pattern)
+        except re.error as error:
+            raise ScenarioError(f"{sid}: bad expected_reply pattern {pattern}: {error}") from error
     end = item["expected_end_state"]
     if not isinstance(end, dict) or not end.keys() <= {"new_bookings", "bookings"}:
         raise ScenarioError(f"{sid}: expected_end_state takes new_bookings and bookings")
