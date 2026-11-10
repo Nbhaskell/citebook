@@ -67,6 +67,10 @@ _EXCLUDED_SUFFIXES = (
     "tests/test_check_personal_info.py",
 )
 
+# Customer-facing copy of the invented business, written in its own voice ("Do I need to be
+# home?", "reviewed by the owner"). The wording rules do not apply there; every other check does.
+_PRODUCT_COPY_DIRS = ("universe/docs/", "kb/docs/")
+
 
 @dataclass(frozen=True)
 class Finding:
@@ -108,7 +112,8 @@ def scan_text(path: str, text: str) -> list[Finding]:
                 break
         if _OWNER_NOTE.search(line):
             labels.append("note about the author")
-        if path.lower().endswith(".md"):
+        is_copy = path.replace("\\", "/").startswith(_PRODUCT_COPY_DIRS)
+        if path.lower().endswith(".md") and not is_copy:
             if _PERSON_WORDING.search(line):
                 labels.append("wording about a person (describe the decision instead)")
             if _FIRST_PERSON.search(line) and not _USER_STORY.match(line):

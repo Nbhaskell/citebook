@@ -139,7 +139,7 @@ Notes on specific tools:
 
 `RagProjectKB` calls rag-project's `POST /api/search`, a retrieval-only endpoint that returns passages with source, section, text and distance and makes no model call. The endpoint is a separate change in the rag-project repo. Until it exists, `get_policy` runs on `FakeKB` and the integration test is skipped. Calling `/api/ask` instead is rejected: it runs a full model answer (about 8 s, thinking on) on the same Ollama instance for every policy question.
 
-rag-project indexes one documents folder at a time. Citebook runs it with `RAG_DOCS_DIR` set to Citebook's knowledge-base folder and its own index folder, so Citebook and Citedesk cannot use it at the same moment. The knowledge-base folder holds `universe/docs` plus any Citebook policy text generated from settings (implementation plan Phase 1).
+rag-project indexes one documents folder at a time. Citebook runs it with `RAG_DOCS_DIR` set to `kb/docs/` and its own index folder, so Citebook and Citedesk cannot use it at the same moment. The knowledge-base folder is `kb/docs/`: the `universe/docs` files plus `online-booking.md`, which `tools/build_data.py` generates from settings and the price book.
 
 ## 7. Confirmation
 

@@ -1,0 +1,123 @@
+{
+  "_comment": "SYNTHETIC TEST DATA. Single source of truth for the invented business. Every document, inquiry and label is derived from this file. Nothing here is real.",
+  "schema_version": 1,
+  "synthetic": true,
+  "business": {
+    "name": "Kestrel Hollow Plumbing",
+    "type": "residential plumbing service",
+    "address": "22 Millrace Lane, Alderbrook (invented street and town)",
+    "phone": "555-0171",
+    "emergency_phone": "555-0172",
+    "email": "kestrelhollow@example.com",
+    "website": "none (inquiries arrive by web form and email)",
+    "currency": "USD",
+    "credentials": "Licensed and insured (invented credentials)",
+    "customers": "Homes and small residential buildings of up to 4 units"
+  },
+  "staff": [
+    {"name": "Rosalind Tavares", "role": "Owner and master plumber", "handles": "complaints, refunds and disputes, policy exceptions, landlord and property-manager accounts, supplier and partnership offers"},
+    {"name": "Kenji Aldous", "role": "Office manager and dispatcher", "handles": "scheduling, availability, rescheduling, invoices"},
+    {"name": "Obadiah Finch", "role": "Lead technician", "handles": "on-site work"},
+    {"name": "Lucia Marrow", "role": "Technician", "handles": "on-site work"}
+  ],
+  "services_offered": [
+    {"name": "Emergency plumbing repair", "service_type": "emergency_repair", "pricing": "emergency call-out fee plus hourly labour and parts"},
+    {"name": "Drain cleaning", "service_type": "drain_cleaning", "pricing": "flat price"},
+    {"name": "Main sewer line cleaning", "service_type": "drain_cleaning", "pricing": "flat price"},
+    {"name": "Sewer line repair", "service_type": "sewer_line_repair", "pricing": "quote only, after a camera inspection"},
+    {"name": "Leak detection", "service_type": "leak_repair", "pricing": "flat price"},
+    {"name": "Plumbing leak repair", "service_type": "leak_repair", "pricing": "quote only, hourly labour plus parts"},
+    {"name": "Slab leak repair", "service_type": "leak_repair", "pricing": "quote only, after leak detection"},
+    {"name": "Water heater service and replacement", "service_type": "water_heater", "pricing": "flat price for flush and tank replacement; tankless is quote only"},
+    {"name": "Fixture installation", "service_type": "fixture_installation", "pricing": "flat price"},
+    {"name": "Plumbing inspection", "service_type": "inspection", "pricing": "flat price"},
+    {"name": "General plumbing repair", "service_type": "other", "pricing": "hourly labour plus parts, with a written estimate over $300"}
+  ],
+  "service_area": {
+    "core": ["Alderbrook Heights", "Millrace", "Old Quarry", "Tamarind Park", "Wren Common"],
+    "outer": {"areas": ["Dunmore Flats", "Saltmarsh"], "travel_fee": 40},
+    "not_served": "Anywhere else"
+  },
+  "hours": {
+    "office": {
+      "monday_to_friday": {"open": "07:30", "close": "17:00"},
+      "saturday": {"open": "08:00", "close": "12:00"},
+      "sunday": "closed"
+    },
+    "scheduled_visits": {
+      "monday_to_friday": {"first_arrival": "08:00", "last_arrival": "16:00"},
+      "saturday": {"first_arrival": "08:00", "last_arrival": "13:00"},
+      "arrival_windows_hours": 2,
+      "courtesy_call_minutes_before": 30
+    },
+    "emergency_line": "Answered 24 hours a day, every day including holidays",
+    "closed_dates": [
+      {"date": "2026-11-26", "name": "Thanksgiving Day"},
+      {"date": "2026-12-25", "name": "Christmas Day"},
+      {"date": "2027-01-01", "name": "New Year's Day"}
+    ],
+    "closed_dates_note": "The office and scheduled visits are closed on these dates. The emergency line still answers and after-hours emergency pricing applies."
+  },
+  "pricing": {
+    "call_out_fee": {"price": 89, "note": "Covers travel and diagnosis. Credited toward the work if the customer approves it during the same visit."},
+    "emergency_call_out_fee": {"price": 175, "applies": "Emergency visits, and any visit outside scheduled-visit hours, on Sundays or on closed dates. Replaces the standard call-out fee."},
+    "labour": {"price_per_hour": 115, "billing": "30-minute increments after the first hour, minimum 1 hour", "excludes": "parts"},
+    "parts": {"note": "Priced on the written estimate. Parts carry sales tax; labour does not.", "parts_sales_tax_rate": 0.07},
+    "flat_price_jobs": [
+      {"job": "Drain cleaning, one fixture (sink, tub, shower or toilet)", "service_type": "drain_cleaning", "price": 149, "price_note": "starting price"},
+      {"job": "Main sewer line cleaning", "service_type": "drain_cleaning", "price": 329},
+      {"job": "Camera inspection of a drain or sewer line", "service_type": "inspection", "price": 175},
+      {"job": "Leak detection (electronic, finds the source of a hidden leak)", "service_type": "leak_repair", "price": 245, "note": "Credited toward the repair if the customer approves it during the same visit"},
+      {"job": "Water heater flush", "service_type": "water_heater", "price": 129},
+      {"job": "Water heater replacement, 40-gallon tank, installed", "service_type": "water_heater", "price": 1450, "note": "Includes permit and removal of the old unit"},
+      {"job": "Water heater replacement, 50-gallon tank, installed", "service_type": "water_heater", "price": 1650, "note": "Includes permit and removal of the old unit"},
+      {"job": "Faucet replacement, customer supplies the faucet", "service_type": "fixture_installation", "price": 165},
+      {"job": "Toilet replacement, customer supplies the toilet", "service_type": "fixture_installation", "price": 210},
+      {"job": "Garbage disposal installation, customer supplies the unit", "service_type": "fixture_installation", "price": 185},
+      {"job": "Fixture shut-off valve replacement, each", "service_type": "fixture_installation", "price": 135},
+      {"job": "Whole-home plumbing inspection with written summary", "service_type": "inspection", "price": 225, "note": "About 2 hours. Summary sent within 2 business days."}
+    ],
+    "quote_only": ["Tankless water heater installation", "Repiping", "Sewer line repair (after a camera inspection)", "Slab leak repair (after leak detection)", "Leak and pipe repair (hourly labour plus parts)", "Bathroom or kitchen remodel plumbing"],
+    "written_estimate_required_over": 300,
+    "discounts": "None offered. No senior, military, repeat-customer or price-match discounts.",
+    "payment": {"methods": ["card", "check", "cash"], "when": "On completion of the visit", "invoice": "Emailed the same day", "late_fee_percent_per_month": 1.5, "late_fee_after_days": 30}
+  },
+  "emergencies": {
+    "definition": "A burst pipe, a leak that cannot be stopped, sewage backing up into the home, or flooding.",
+    "response": "Technician dispatched through the emergency line, usually within 2 hours (not guaranteed).",
+    "urgent_not_emergency": "No hot water, a toilet that will not stop running, and a slow leak that is contained are booked as the next available visit, same day if requested before 12:00 and there is room.",
+    "standard_lead_time": "Standard appointments are usually 2 to 4 business days out; staff confirm the exact day."
+  },
+  "safety_instructions": {
+    "_note": "The only advice staff may give in a reply. Anything beyond this goes to a person.",
+    "water_wont_stop": "Turn off the main water valve, usually where the water line enters the house or near the water meter.",
+    "gas_smell": "Leave the building at once. Do not use switches, lighters or phones inside. Call the gas utility's emergency number or 911 from outside.",
+    "sewage_backup": "Stop using sinks, tubs, showers and toilets until a plumber has looked at it.",
+    "carbon_monoxide_alarm": "Leave the building and call 911."
+  },
+  "policies": {
+    "reschedule_and_cancel": {
+      "free_with_notice_hours": 24,
+      "late_fee": 45,
+      "no_show_or_no_access": "The call-out fee of $89 is charged",
+      "emergency_cancelled_after_dispatch": "The emergency call-out fee of $175 is charged"
+    },
+    "warranty": {
+      "workmanship_months": 12,
+      "parts": "Covered by the manufacturer's warranty, not by Kestrel Hollow Plumbing",
+      "drain_cleaning": "If the same drain clogs again within 30 days, one return visit is free",
+      "voided_by": "Work altered or repaired by someone else"
+    },
+    "access": "An adult aged 18 or over must be present during the visit. Pets should be kept away from the work area.",
+    "estimates": "No work over $300 starts without a written estimate the customer has approved.",
+    "refunds_and_disputes": "The call-out fee is not refundable but is credited to approved work. Complaints and disputes are reviewed by the owner. Staff cannot promise a refund, credit or discount in a reply.",
+    "insurance": "Kestrel Hollow Plumbing can provide an itemised invoice and photos for an insurance claim. It does not file claims or give opinions on coverage.",
+    "water_damage": "Technicians stop the leak and repair the plumbing. They do not dry out, clean up or repair water damage; a restoration company is needed for that.",
+    "communication": "No visit is confirmed until a staff member confirms it. A reply is never an automatic confirmation or a price guarantee.",
+    "not_offered": ["Gas line or gas appliance work", "Electrical work", "Heating and air conditioning", "Commercial or industrial buildings", "Septic tank pumping", "Well pumps", "Irrigation and sprinkler systems", "Mould remediation", "Roof leaks"]
+  },
+  "contact_rules": {
+    "booking_requires": ["service type", "preferred date", "property type", "neighbourhood or address area"],
+    "availability_note": "Live availability is not in the documents. Staff check the schedule before answering availability questions."
+  }
+}

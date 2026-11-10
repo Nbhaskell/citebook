@@ -1,0 +1,69 @@
+{
+  "business_tz": "America/Los_Angeles",
+  "office_hours": {
+    "monday_to_friday": {
+      "open": "07:30",
+      "close": "17:00"
+    },
+    "saturday": {
+      "open": "08:00",
+      "close": "12:00"
+    },
+    "sunday": "closed"
+  },
+  "visit_hours": {
+    "monday_to_friday": [
+      "08:00",
+      "10:00",
+      "12:00",
+      "14:00"
+    ],
+    "saturday": [
+      "08:00",
+      "11:00"
+    ]
+  },
+  "closed_dates": [
+    "2026-11-26",
+    "2026-12-25",
+    "2027-01-01"
+  ],
+  "arrival_window_minutes": 120,
+  "hold_ttl_business_hours": 4,
+  "staff_confirm_typical_business_hours": 2,
+  "quote_ttl_minutes": 30,
+  "free_cancel_hours": 24,
+  "max_reschedules": 2,
+  "zip_areas": {
+    "00011": {
+      "area": "Alderbrook Heights",
+      "zone": "core"
+    },
+    "00012": {
+      "area": "Millrace",
+      "zone": "core"
+    },
+    "00013": {
+      "area": "Old Quarry",
+      "zone": "core"
+    },
+    "00014": {
+      "area": "Tamarind Park",
+      "zone": "core"
+    },
+    "00015": {
+      "area": "Wren Common",
+      "zone": "core"
+    },
+    "00021": {
+      "area": "Dunmore Flats",
+      "zone": "outer"
+    },
+    "00022": {
+      "area": "Saltmarsh",
+      "zone": "outer"
+    }
+  },
+  "verification_max_attempts": 3,
+  "synthetic_data": true
+}

@@ -117,3 +117,26 @@ The guard does not catch everything: names of real people, or personal details w
 
 ### D-032. CI: lint and tests only
 `.github/workflows/ci.yml` (actions `checkout`, `setup-python`, `setup-node` at v7, read-only permissions) has two jobs. Python: ruff check, ruff format check, mypy, pytest, the personal-information check over all tracked files, and the gitleaks scan over the full history (`fetch-depth: 0`). Web: `npm ci`, lint, typecheck, Vitest, and a regenerate-and-diff of the API types. No model, knowledge base or network is needed, as `docs/TRD.md` section 14 requires. The pinned requirements install cleanly into a fresh virtual environment (`pip check` clean). First CI run: green on 2026-11-10 (UTC) for commit `f01f490`, both jobs, 58 seconds.
+
+## Phase 1
+
+### D-033. Business data source
+`universe/` is Citedesk's `universe/` at commit `d64b8a0`, copied without changes; a test checks every file against Citedesk's `manifest.json` hashes. `universe/README.md` describes Citedesk's own generator, which is not part of Citebook; in Citebook, `tools/build_data.py` reads the universe.
+
+### D-034. Generated seed files and knowledge base
+`tools/build_data.py` reads `universe/facts.json` and `universe/citebook_extension.json` and writes `db/seed/` (services, technicians, customers, price book, settings) and `kb/docs/` (the universe documents plus `online-booking.md`). The outputs are committed so they can be read and reviewed; a test fails when they differ from what the generator writes. A second test checks that every fee, price, time limit and ZIP code in the seed files also appears in `kb/docs/`, so the assistant can never state a policy number the knowledge base does not contain. `price_book.version` is the first 8 hex digits of the SHA-256 of `facts.json`.
+
+### D-035. Business time zone
+`facts.json` has no time zone. The extension sets `America/Los_Angeles`. The four-week calendar (9 November to 6 December 2026) has no daylight-saving change; DST behavior is covered by unit tests in Phase 2.
+
+### D-036. Saturday arrival windows
+Weekday windows start at 8:00, 10:00, 12:00 and 14:00, so the last window ends at the published last arrival, 4:00 pm. Saturday allows arrivals from 8:00 to 1:00 pm, which does not divide into 2-hour windows; Saturday windows are 8:00–10:00 and 11:00–1:00 pm, so neither overlaps and both stay inside the published hours.
+
+### D-037. Jobs over $300 are not bookable online
+The business starts no work over $300 without an approved written estimate. Services priced over $300 (main sewer line cleaning, water heater replacements) are quoted in the chat but not bookable online (`bookable_online = 0`); staff arrange them. Quote-only services are never bookable online and name a bookable first step where one exists (`first_step_code`): camera inspection before sewer line repair, leak detection before slab leak or leak repair.
+
+### D-038. Invented ZIP codes and technician skills
+ZIP codes use the unassigned `000xx` range, so none matches a real place: one per neighbourhood, in its published zone. The two published technicians have different skills: Obadiah Finch does every service type, Lucia Marrow does not do inspections or sewer line repair, so availability differs by service.
+
+### D-039. The business's own copy keeps its voice
+`universe/docs/` and `kb/docs/` are customer-facing text in the invented business's voice: questions a customer asks in the first person, and policies that name the business's own roles. The universe copy must also stay byte-for-byte unchanged. The personal-information guard therefore skips its two wording rules in those folders only. Every other check, such as email addresses, phone numbers and local paths, still runs there, and a test covers both sides.

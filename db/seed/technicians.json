@@ -1,0 +1,30 @@
+[
+  {
+    "id": "9d69f013-e516-480b-8dcb-8ffce69e96c0",
+    "key": "finch",
+    "name": "Obadiah Finch",
+    "skills": [
+      "drain_cleaning",
+      "inspection",
+      "leak_repair",
+      "water_heater",
+      "fixture_installation",
+      "sewer_line_repair",
+      "other"
+    ],
+    "active": 1
+  },
+  {
+    "id": "9f8c45d4-3e3c-450f-b0a2-bc5fa6890179",
+    "key": "marrow",
+    "name": "Lucia Marrow",
+    "skills": [
+      "drain_cleaning",
+      "leak_repair",
+      "water_heater",
+      "fixture_installation",
+      "other"
+    ],
+    "active": 1
+  }
+]

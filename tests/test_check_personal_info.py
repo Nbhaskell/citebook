@@ -213,3 +213,12 @@ def test_main_checks_a_message_file(tmp_path: Path) -> None:
     dirty.write_text("Add the rule\n\nCo-Authored-By: someone\n", encoding="utf-8")
     assert main(["--message", str(clean)]) == 0
     assert main(["--message", str(dirty)]) == 1
+
+
+def test_business_copy_keeps_its_own_voice_but_not_real_contact_details() -> None:
+    text = "## Do I need to be home?\nDisputes are reviewed by the owner.\n"
+    assert scan_text("kb/docs/faq.md", text) == []
+    assert scan_text("universe/docs/faq.md", text) == []
+    assert scan_text("docs/faq.md", text) != []
+    leak = "Write to sam@realmail.test\n"
+    assert [f.label for f in scan_text("kb/docs/faq.md", leak)] == ["email address"]

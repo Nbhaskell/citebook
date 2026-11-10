@@ -1,0 +1,74 @@
+[
+  {
+    "id": "c10bd5cb-e819-495e-8eae-725adaffeb97",
+    "key": "c01",
+    "name": "Sam Okafor",
+    "phone": "555-0142",
+    "email": "sam.okafor@example.com",
+    "address": "14 Example St, Millrace",
+    "zip_code": "00012"
+  },
+  {
+    "id": "9075a890-51c1-4b3d-a9a7-63f006ce192b",
+    "key": "c02",
+    "name": "Priya Lindqvist",
+    "phone": "555-0103",
+    "email": "priya.lindqvist@example.com",
+    "address": "7 Larkspur Row, Old Quarry",
+    "zip_code": "00013"
+  },
+  {
+    "id": "ab5c511f-5cd4-40e0-9898-dceb9bb68150",
+    "key": "c03",
+    "name": "Dana Whitcombe",
+    "phone": "555-0104",
+    "email": "dana.whitcombe@example.com",
+    "address": "31 Tern Court, Wren Common",
+    "zip_code": "00015"
+  },
+  {
+    "id": "fffef205-f673-4716-8420-c04051e87bde",
+    "key": "c04",
+    "name": "Marcus Abernathy",
+    "phone": "555-0105",
+    "email": "marcus.abernathy@example.com",
+    "address": "220 Quarry Hill Road, Old Quarry",
+    "zip_code": "00013"
+  },
+  {
+    "id": "f39f8c94-b4c5-4d2d-b893-867e0d88e288",
+    "key": "c05",
+    "name": "Ines Carvalho",
+    "phone": "555-0106",
+    "email": "ines.carvalho@example.com",
+    "address": "5 Heron Walk, Tamarind Park",
+    "zip_code": "00014"
+  },
+  {
+    "id": "9fa66a4c-6564-4337-89f2-b2adedffe9fe",
+    "key": "c06",
+    "name": "Toby Nakamura",
+    "phone": "555-0107",
+    "email": "toby.nakamura@example.com",
+    "address": "88 Ridgeback Lane, Alderbrook Heights",
+    "zip_code": "00011"
+  },
+  {
+    "id": "3b100964-d7e0-4501-a869-35e420b53e2f",
+    "key": "c07",
+    "name": "Ruth Okonjo",
+    "phone": "555-0108",
+    "email": "ruth.okonjo@example.com",
+    "address": "3 Saltgrass Way, Saltmarsh",
+    "zip_code": "00022"
+  },
+  {
+    "id": "52ad5c40-0729-4210-b966-192d0cd7fb2a",
+    "key": "c08",
+    "name": "Felix Brandt",
+    "phone": "555-0109",
+    "email": "felix.brandt@example.com",
+    "address": "61 Flats Road, Dunmore Flats",
+    "zip_code": "00021"
+  }
+]
