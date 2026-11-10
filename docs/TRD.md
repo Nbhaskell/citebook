@@ -230,7 +230,7 @@ One error shape: `{ "error": { "code", "message", "request_id" } }`. Staff route
 
 ## 12. Configuration
 
-`CITEBOOK_DB_PATH`, `CITEBOOK_PORT=8300`, `CITEBOOK_MODEL_PROVIDER=ollama`, `OLLAMA_URL`, `CITEBOOK_MODEL=qwen3:8b`, `CITEBOOK_ENABLE_THINKING=false`, `CITEBOOK_KB_URL=http://127.0.0.1:8000`, `CITEBOOK_MAX_TOOL_CALLS_PER_TURN=6`, `CITEBOOK_MAX_CONSECUTIVE_REFUSALS=3`, `CITEBOOK_TURN_TIMEOUT_S=60`, `CITEBOOK_ALLOW_HOSTED=false`, `CITEBOOK_SYNTHETIC_DATA=true`, `CITEBOOK_ABLATION=none` (evaluation runner only; the API refuses to start with any other value unless `CITEBOOK_EVAL=true`; see section 9), `CITEBOOK_EVAL=false`. Business rules live in `settings` and `db/seed/price_book.json`, not in env.
+`CITEBOOK_DB_PATH`, `CITEBOOK_PORT=8300`, `CITEBOOK_MODEL_PROVIDER=ollama`, `OLLAMA_URL`, `CITEBOOK_MODEL=qwen3:8b`, `CITEBOOK_ENABLE_THINKING=false`, `CITEBOOK_KB_URL=http://127.0.0.1:8000`, `CITEBOOK_MAX_TOOL_CALLS_PER_TURN=6`, `CITEBOOK_MAX_CONSECUTIVE_REFUSALS=3`, `CITEBOOK_TURN_TIMEOUT_S=60`, `CITEBOOK_ALLOW_HOSTED=false`, `CITEBOOK_SYNTHETIC_DATA=true`, `CITEBOOK_ABLATION=none` (evaluation runner only; the API refuses to start with any other value unless `CITEBOOK_EVAL=true`; see section 9), `CITEBOOK_EVAL=false`, `CITEBOOK_DEMO_START` (empty: real time; set: a demo clock that starts at that time when the API starts, D-066). Business rules live in `settings` and `db/seed/price_book.json`, not in env.
 
 ## 13. Security and privacy
 

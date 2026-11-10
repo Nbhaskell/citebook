@@ -20,7 +20,7 @@ describe("entry points", () => {
 
   it("console carries the demo-data label", () => {
     render(<ConsoleApp />);
-    expect(screen.getByRole("heading", { name: "Citebook staff console" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Queue" })).toBeInTheDocument();
     expect(
       screen.getByText("Demo data. This business, its staff and customers are invented."),
     ).toBeInTheDocument();

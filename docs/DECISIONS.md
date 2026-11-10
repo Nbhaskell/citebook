@@ -287,3 +287,13 @@ One direction for both surfaces (UI brief section 6), with the tokens in `web/sr
 - Widget and demo page: warm paper background (`#faf7f2`), near-black ink text, one deep teal action colour (`#0b5e5a`) for buttons and links. The confirmation card looks like a receipt, not a chat bubble: white, a perforated top edge, rows with aligned figures. Orange (`#b4410e`) is used only for emergencies. Assistant and customer messages are plain blocks with a role label, so actions never look like messages.
 - Console: calm and dense. Grey neutrals, tables, no decoration. Status is always a word, an icon and a colour, never colour alone.
 - System fonts only (no web fonts), inline SVG line icons, no emoji, no gradients, no sparkle icons. Focus ring orange-brown (`#b4530e`), 3 px, on every control.
+
+### D-066. Demo clock for the dev server
+The seeded calendar covers one week from Monday 9 November 2026 (`base_week_1`). With real time, the widget would find no open times once that week has passed. `CITEBOOK_DEMO_START` (an ISO date-time with a UTC offset, empty by default) gives the API a demo clock: it reads that time when the API starts and then runs forward in real time, so holds still expire and ages still grow. The local dev `.env` uses `2026-11-09T07:00:00-08:00`, the seed state's own time. Restarting the API starts the clock again from that time, so reseed with `python -m tools.seed_db --fresh` at the same moment. Tests and the scenario runner keep passing their own fixed clock to `create_app`, which wins over the setting. `/api/status` now returns `now` (the app's time) and `clock` (`real`, `demo` or `fixed`); the console shows ages against the API's time, not the browser's, and the status page names the clock.
+
+### D-067. Console choices the UI brief leaves open
+- Hash routes (`#/queue/<group>`, `#/conversation/<id>`, `#/calendar`, `#/outbox`, `#/status`): no router library, and a reload keeps the view.
+- The queue, the open conversation and the calendar reload every 8 to 15 seconds and have a Refresh button. The widget reads its transcript every 5 seconds, to show staff messages and a take-over.
+- Queue groups keep the API order: needs decision and handoffs oldest first; expired holds and recent decisions newest first, because they are history, not work.
+- A rejection needs a reason in the console before the API is called; four quick reasons fill the box and can be edited. The decision sends the seconds since the conversation opened as `review_seconds`.
+- The status page shows the business rules as read-only text only; v1 has no settings route, so hold time and cancellation window are changed in the database.

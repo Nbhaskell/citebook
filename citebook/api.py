@@ -58,6 +58,8 @@ class Status(BaseModel):
     kb: str
     kb_reachable: bool | None
     database: str | None
+    now: str
+    clock: Literal["real", "demo", "fixed"]
 
 
 class NewConversation(BaseModel):
@@ -223,6 +225,13 @@ def _expire_once(settings: Settings, now: datetime) -> None:
         conn.close()
 
 
+def demo_clock(start: datetime, real: Clock | None = None) -> Clock:
+    """A clock that reads `start` when made and then runs forward in real time (D-066)."""
+    read_real: Clock = real or (lambda: datetime.now(UTC))
+    began = read_real()
+    return lambda: start.astimezone(UTC) + (read_real() - began)
+
+
 def create_app(
     settings: Settings,
     *,
@@ -230,6 +239,10 @@ def create_app(
     kb: KnowledgeBase | None = None,
     clock: Clock | None = None,
 ) -> FastAPI:
+    clock_kind: Literal["real", "demo", "fixed"] = "fixed" if clock else "real"
+    if clock is None and settings.demo_start is not None:
+        clock = demo_clock(settings.demo_start)
+        clock_kind = "demo"
     now_of: Clock = clock or (lambda: datetime.now(UTC))
 
     @asynccontextmanager
@@ -329,6 +342,8 @@ def create_app(
             model_reachable=reachable(get_provider()),
             kb_reachable=reachable(get_kb()),
             database=database_state(settings),
+            now=to_utc_text(now_of()),
+            clock=clock_kind,
         )
 
     @app.get("/api/conversations/{conversation_id}", responses=ERRORS)

@@ -581,6 +581,11 @@ export interface components {
          */
         Status: {
             ablation: components["schemas"]["Ablation"];
+            /**
+             * Clock
+             * @enum {string}
+             */
+            clock: "real" | "demo" | "fixed";
             /** Database */
             database: string | null;
             /** Kb */
@@ -591,6 +596,8 @@ export interface components {
             model: string;
             /** Model Reachable */
             model_reachable: boolean | null;
+            /** Now */
+            now: string;
             /** Provider */
             provider: string;
             /** Service */

@@ -69,3 +69,64 @@ export function age(utc: string, now: Date = new Date()): string {
   if (hours < 48) return `${hours} h`;
   return `${Math.floor(hours / 24)} d`;
 }
+
+export const STATUS_LABELS: Record<string, { word: string; icon: IconName; tone: Tone }> = {
+  proposed: { word: "Waiting for customer", icon: "clock", tone: "neutral" },
+  customer_confirmed: { word: "Customer confirmed", icon: "check", tone: "neutral" },
+  pending_staff: { word: "Needs decision", icon: "inbox", tone: "warn" },
+  approved: { word: "Approved", icon: "check", tone: "ok" },
+  rejected: { word: "Rejected", icon: "cross", tone: "bad" },
+  executed: { word: "Done", icon: "check", tone: "ok" },
+  expired: { word: "Expired", icon: "clock", tone: "bad" },
+  withdrawn: { word: "Withdrawn by customer", icon: "undo", tone: "neutral" },
+  failed: { word: "Failed", icon: "cross", tone: "bad" },
+};
+
+export type Tone = "ok" | "warn" | "bad" | "neutral";
+
+export const SLOT_LABELS: Record<string, { word: string; icon: IconName; tone: Tone }> = {
+  open: { word: "Open", icon: "check", tone: "ok" },
+  held: { word: "Held", icon: "clock", tone: "warn" },
+  booked: { word: "Booked", icon: "person", tone: "neutral" },
+  blocked: { word: "Blocked", icon: "cross", tone: "bad" },
+};
+
+export const OUTBOX_LABELS: Record<string, string> = {
+  hold_received: "Hold received",
+  booking_confirmed: "Booking confirmed",
+  hold_declined: "Hold declined",
+  hold_expired: "Hold expired",
+  booking_rescheduled: "Booking moved",
+  booking_cancelled: "Booking cancelled",
+  request_received: "Request received",
+};
+
+export const CONVERSATION_LABELS: Record<string, string> = {
+  active: "Bot answering",
+  awaiting_confirmation: "Card open",
+  handed_off: "With staff",
+  closed: "Closed",
+  abandoned: "Abandoned",
+};
+
+const TZ = "America/Los_Angeles";
+
+/** "8:00 AM" in the business time zone. */
+export function businessClock(utc: string): string {
+  return new Date(utc).toLocaleTimeString("en-US", { timeZone: TZ, hour: "numeric", minute: "2-digit" });
+}
+
+/** "Mon 9 Nov" in the business time zone. */
+export function businessDay(utc: string): string {
+  return new Date(utc).toLocaleDateString("en-GB", {
+    timeZone: TZ,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).replace(",", "");
+}
+
+/** The business-time date as "2026-11-09", for grouping. */
+export function businessDate(utc: string): string {
+  return new Date(utc).toLocaleDateString("en-CA", { timeZone: TZ });
+}

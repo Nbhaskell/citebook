@@ -1,31 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchStatus } from "../api/client";
+import { AblationBanner } from "../shared/AblationBanner";
 import { Icon } from "../shared/Icon";
 import { Chat } from "./Chat";
 import "../shared/tokens.css";
 import "./widget.css";
-
-/** Red banner when the API runs an evaluation ablation (UI brief section 4, status). */
-export function AblationBanner() {
-  const [ablation, setAblation] = useState<string | null>(null);
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchStatus(controller.signal).then(
-      (result) => {
-        if (result.kind === "ok" && result.status.ablation !== "none")
-          setAblation(result.status.ablation);
-      },
-      () => {},
-    );
-    return () => controller.abort();
-  }, []);
-  if (!ablation) return null;
-  return (
-    <p className="banner-eval" role="alert">
-      <Icon name="alert" /> Evaluation mode: safety layer switched off ({ablation})
-    </p>
-  );
-}
 
 /**
  * The customer widget. "page" fills the window (/widget/); "launcher" is the floating button and

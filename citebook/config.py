@@ -1,5 +1,6 @@
 """Settings read from environment variables (and a local .env file). See docs/TRD.md section 12."""
 
+from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
@@ -42,6 +43,10 @@ class Settings(BaseSettings):
     allow_hosted: bool = Field(default=False, validation_alias="CITEBOOK_ALLOW_HOSTED")
     synthetic_data: bool = Field(default=True, validation_alias="CITEBOOK_SYNTHETIC_DATA")
 
+    # A demo clock: when set, the app's time starts here and runs forward from the moment the
+    # API starts, so the seeded calendar (from Monday 9 November 2026) always has open times.
+    demo_start: datetime | None = Field(default=None, validation_alias="CITEBOOK_DEMO_START")
+
     ablation: Ablation = Field(default=Ablation.NONE, validation_alias="CITEBOOK_ABLATION")
     eval_mode: bool = Field(default=False, validation_alias="CITEBOOK_EVAL")
 
@@ -51,6 +56,15 @@ class Settings(BaseSettings):
         if not value.startswith(("http://", "https://")):
             raise ValueError("service URLs must start with http:// or https://")
         return value.rstrip("/")
+
+    @field_validator("demo_start")
+    @classmethod
+    def aware(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.tzinfo is None:
+            raise ValueError(
+                "CITEBOOK_DEMO_START needs a UTC offset, e.g. 2026-11-09T07:00:00-08:00"
+            )
+        return value
 
     @model_validator(mode="after")
     def safety_switches(self) -> "Settings":

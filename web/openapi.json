@@ -991,6 +991,15 @@
           "ablation": {
             "$ref": "#/components/schemas/Ablation"
           },
+          "clock": {
+            "enum": [
+              "real",
+              "demo",
+              "fixed"
+            ],
+            "title": "Clock",
+            "type": "string"
+          },
           "database": {
             "anyOf": [
               {
@@ -1032,6 +1041,10 @@
             ],
             "title": "Model Reachable"
           },
+          "now": {
+            "title": "Now",
+            "type": "string"
+          },
           "provider": {
             "title": "Provider",
             "type": "string"
@@ -1059,7 +1072,9 @@
           "model_reachable",
           "kb",
           "kb_reachable",
-          "database"
+          "database",
+          "now",
+          "clock"
         ],
         "title": "Status",
         "type": "object"

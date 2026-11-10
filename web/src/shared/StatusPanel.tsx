@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchStatus, type StatusResult } from "../api/client";
+import { businessTime } from "./labels";
 
 function checked(value: boolean | null): string {
   if (value === null) return "Not checked yet";
@@ -38,6 +39,11 @@ export function StatusPanel() {
         <dd>{checked(s.kb_reachable)}</dd>
         <dt>Database</dt>
         <dd>{s.database ?? "Not checked yet"}</dd>
+        <dt>Clock</dt>
+        <dd>
+          {s.clock === "demo" ? "Demo clock" : s.clock === "fixed" ? "Fixed (tests)" : "Real time"}
+          {s.now ? `, now ${businessTime(s.now)}` : ""}
+        </dd>
         <dt>Data</dt>
         <dd>{s.synthetic_data ? "Synthetic (invented)" : "Not marked synthetic"}</dd>
       </dl>

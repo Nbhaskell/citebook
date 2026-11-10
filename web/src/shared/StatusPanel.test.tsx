@@ -14,6 +14,8 @@ const ok: Status = {
   model_reachable: null,
   kb_reachable: null,
   database: null,
+  now: "2026-11-09T15:00:00Z",
+  clock: "real",
 };
 
 function stubFetch(impl: () => Promise<Response>) {
