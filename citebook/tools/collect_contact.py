@@ -13,7 +13,15 @@ from pydantic import Field, field_validator
 
 from citebook.models import ToolKind, ToolName
 from citebook.timeutil import to_utc_text
-from citebook.tools.base import Block, ToolArgs, ToolContext, ToolOutput, ToolSpec, blocked
+from citebook.tools.base import (
+    Block,
+    ToolArgs,
+    ToolContext,
+    ToolOutput,
+    ToolSpec,
+    blocked,
+    invalid,
+)
 from citebook.tools.common import SAY_OUT_OF_AREA, zip_problem
 
 EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -21,7 +29,7 @@ EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 class Args(ToolArgs):
     name: str = Field(min_length=1, max_length=80)
-    phone: str = Field(max_length=20, description="Phone number, for example 555-0142")
+    phone: str = Field(max_length=20, description="The phone number the customer gave")
     email: str | None = Field(default=None, max_length=120)
     address: str = Field(min_length=3, max_length=200, description="Street address of the job")
     zip_code: str = Field(pattern=r"^\d{5}$")
@@ -55,8 +63,49 @@ class Args(ToolArgs):
         return value
 
 
+SAY_CONTACT_NOT_GIVEN = (
+    "Ask the customer for their name, phone number and the street address of the job. Use only "
+    "details the customer wrote in this conversation; never fill in example or placeholder values."
+)
+
+
+def contact_problem(ctx: ToolContext, args: Args) -> Block | None:
+    """Contact details must come from the customer's own messages (D-080).
+
+    The model was seen to copy an example phone number from a schema and to invent a name and an
+    address before the customer gave any. As with the ZIP code (D-063), a conversation with no
+    customer message (tools driven directly) has nothing to compare with."""
+    texts = [
+        r["content"].lower()
+        for r in ctx.conn.execute(
+            "SELECT content FROM messages WHERE conversation_id = ? AND role = 'customer'",
+            (ctx.conversation_id,),
+        )
+    ]
+    if not texts:
+        return None
+    joined = " ".join(texts)
+    digits = [re.sub(r"\D", "", text) for text in texts]
+    words = [w for w in re.findall(r"[^\W\d_]{2,}", args.name.lower())]
+    street = re.match(r"\s*(\d+)\D*?([^\W\d_]{2,})", args.address.lower())
+    missing = (
+        not words
+        or not all(re.search(rf"\b{re.escape(w)}\b", joined) for w in words)
+        or not any(re.sub(r"\D", "", args.phone) in d for d in digits)
+        or (args.email is not None and args.email.lower() not in joined)
+        or (
+            street is not None
+            and not (
+                re.search(rf"(?<!\d){street.group(1)}(?!\d)", joined)
+                and re.search(rf"\b{re.escape(street.group(2))}", joined)
+            )
+        )
+    )
+    return invalid(SAY_CONTACT_NOT_GIVEN, "contact_not_given") if missing else None
+
+
 def check_ids(ctx: ToolContext, args: Args) -> Block | None:
-    return zip_problem(ctx, args.zip_code)
+    return zip_problem(ctx, args.zip_code) or contact_problem(ctx, args)
 
 
 def check_policy(ctx: ToolContext, args: Args) -> Block | None:

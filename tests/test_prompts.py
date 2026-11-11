@@ -10,7 +10,7 @@ from tests.conftest import SETTINGS, local
 
 # Changing the prompt or any tool description changes this digest. Then give the prompt a new
 # version id (PROMPT_VERSION and a new system_vN.md) and update both values here.
-PINNED = ("prompt-v3", "de44a51ef50709db45ab38f6f478df54f3710255e671eed051e6bd67f36327d2")
+PINNED = ("prompt-v4", "e2effc84dd8a2817fdfb928b490e9c7022c8a865e069b6395cfaf4207c133aee")
 
 
 def block(rules: Rules, text: str = "", **change: object) -> str:

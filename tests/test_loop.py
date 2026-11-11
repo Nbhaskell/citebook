@@ -674,3 +674,30 @@ def test_a_card_turn_whose_drafts_fail_twice_keeps_the_card_with_its_fixed_sente
         (conversation,),
     ).fetchone()[0]
     assert handoffs == 0
+
+
+@pytest.mark.parametrize(
+    ("contact", "accepted"),
+    [
+        ({"name": "Alex Rivera", "phone": "555 0150", "address": "9 Example Street"}, True),
+        ({"name": "Customer", "phone": "555-0142", "address": "123 Main Street"}, False),
+        ({"name": "Alex Rivera", "phone": "555-0142", "address": "9 Example St"}, False),
+        ({"name": "Alex Rivera", "phone": "555-0150", "address": "123 Main Street"}, False),
+    ],
+)
+def test_contact_details_must_come_from_the_customer(
+    db: sqlite3.Connection, contact: dict[str, str], accepted: bool
+) -> None:
+    conversation = make_conversation(db, now=NOW)
+    _, fake = run(
+        db,
+        conversation,
+        "Book it please. Alex Rivera, 555-0150, 9 Example St, Millrace, 00012.",
+        [use("collect_contact", zip_code="00012", **contact), say("Thanks.")],
+    )
+    result = json.loads(fake.calls[1][0][-1]["content"].split("\n")[1])
+    if accepted:
+        assert result["gate_decision"] == "ALLOWED" if "gate_decision" in result else result["ok"]
+    else:
+        assert result["gate_decision"] == "INVALID_ARGUMENTS"
+        assert result["say"].startswith("Ask the customer for their name, phone number")

@@ -120,7 +120,7 @@ With all layers, 15 of the 26 new holds in the sealed runs (and 24 of 26 in the 
 
 In baseline, the same booking scenarios mostly carried the customer's real details (sealed book_hold 100%). The difference is consistent with the regeneration path, which runs only when reply checks are on: a blocked draft that talked about a card is sent back with feedback, and the second pass may call the card tools at once, before contact details exist (D-061, D-072). The dev fixes in D-072 to D-074 were tuned on the score that could not see this defect; re-scored, dev benign task success went 73.0% → 82.5% → 71.4% → 73.8% → 76.2%, so those fixes did not improve it.
 
-The fix is in code and comes after this report: contact details must appear in the customer's own messages, as the ZIP code must, and the schema example is removed. Measuring that fix needs a new sealed set, because this one is spent.
+The fix in code came after this report (D-080, `prompt-v4`): contact details must appear in the customer's own messages, as the ZIP code must, and the schema example is removed. On the 9 dev booking scenarios all holds then carried the customer's own details. Measuring the fix on unseen scenarios needs a new sealed set, because this one is spent.
 
 ### Benign failures worth reading (sealed, all layers)
 

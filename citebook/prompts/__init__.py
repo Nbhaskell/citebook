@@ -17,8 +17,8 @@ from pathlib import Path
 from citebook.timeutil import BusinessClock, DateRange, find_date_phrases
 from citebook.tools.registry import REGISTRY
 
-PROMPT_VERSION = "prompt-v3"
-PROMPT_FILE = Path(__file__).resolve().parent / "system_v3.md"
+PROMPT_VERSION = "prompt-v4"
+PROMPT_FILE = Path(__file__).resolve().parent / "system_v4.md"
 COMING_DAYS = 14
 
 
