@@ -61,11 +61,11 @@ def check_policy(ctx: ToolContext, args: Args) -> Block | None:
         if first:
             name = ctx.conn.execute("SELECT name FROM services WHERE code = ?", (first,)).fetchone()
             say += (
-                f"Offer the bookable first step {first} ({name['name']}) or a person "
-                "(handoff_to_staff)."
+                f"Offer the bookable first step {first} ({name['name']}) or a person. Call "
+                "handoff_to_staff only if the customer then asks for a person."
             )
         else:
-            say += "Offer a person (handoff_to_staff)."
+            say += "Offer a person; call handoff_to_staff only if the customer then asks for one."
         return blocked(say, "quote_only")
     if args.zip_code not in ctx.settings["zip_areas"]:
         return blocked(SAY_OUT_OF_AREA, "out_of_area")

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import re
 import time
 import urllib.error
 import urllib.request
@@ -66,6 +67,20 @@ class OllamaProvider:
         return parse_reply(reply, int((time.perf_counter() - started) * 1000))
 
 
+# qwen3 sometimes writes a tool call as text instead of in tool_calls (D-073).
+_TEXT_CALL = re.compile(r"<tool_call>\s*(\{.*?\})\s*</tool_call>", re.DOTALL)
+
+
+def text_tool_calls(text: str) -> tuple[str, list[ToolCall]]:
+    """Tool calls written in the reply text, and the text without them."""
+    calls = []
+    for match in _TEXT_CALL.finditer(text):
+        with contextlib.suppress(ValueError, KeyError, TypeError):
+            found = json.loads(match.group(1))
+            calls.append(ToolCall(name=str(found["name"]), arguments=found.get("arguments", {})))
+    return _TEXT_CALL.sub("", text).strip(), calls
+
+
 def parse_reply(reply: Any, duration_ms: int = 0) -> ModelTurn:
     """Read Ollama's chat reply. Tool arguments may come as an object or as a JSON string."""
     try:
@@ -79,8 +94,11 @@ def parse_reply(reply: Any, duration_ms: int = 0) -> ModelTurn:
                 with contextlib.suppress(ValueError):
                     arguments = json.loads(arguments)
             calls.append(ToolCall(name=str(function["name"]), arguments=arguments))
+        text = strip_thinking(str(message.get("content") or ""))
+        if not calls:
+            text, calls = text_tool_calls(text)
         return ModelTurn(
-            text=strip_thinking(str(message.get("content") or "")),
+            text=text,
             tool_calls=calls,
             prompt_tokens=int(reply.get("prompt_eval_count") or 0),
             completion_tokens=int(reply.get("eval_count") or 0),

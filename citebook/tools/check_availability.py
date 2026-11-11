@@ -71,12 +71,13 @@ def not_bookable(ctx: ToolContext, row: sqlite3.Row) -> Block:
         name = ctx.conn.execute("SELECT name FROM services WHERE code = ?", (first,)).fetchone()
         return blocked(
             f"This service cannot be booked online. Offer the bookable first step "
-            f"{first} ({name['name']}) or a person (handoff_to_staff).",
+            f"{first} ({name['name']}) or a person. Call handoff_to_staff only if the "
+            "customer then asks for a person.",
             "not_bookable_online",
         )
     return blocked(
-        "This service cannot be booked online: a team member arranges it. Offer a person "
-        "(handoff_to_staff).",
+        "This service cannot be booked online: a team member arranges it. Offer a person; call "
+        "handoff_to_staff only if the customer then asks for one.",
         "not_bookable_online",
     )
 

@@ -89,6 +89,15 @@ def test_arguments_given_as_a_json_string_are_read() -> None:
     assert parse_reply(broken).tool_calls == [ToolCall("x", "{oops")]
 
 
+def test_a_tool_call_written_as_text_is_read_and_never_shown() -> None:
+    content = '<tool_call>\n{"name": "find_booking", "arguments": {}}\n</tool_call>'
+    turn = parse_reply({"message": {"content": content}})
+    assert turn.tool_calls == [ToolCall("find_booking", {})]
+    assert turn.text == ""
+    broken = parse_reply({"message": {"content": "<tool_call>{oops}</tool_call> Hi"}})
+    assert broken.tool_calls == [] and broken.text == "Hi"
+
+
 @pytest.mark.parametrize("reply", [{}, {"message": None}, {"message": {"tool_calls": [{}]}}, None])
 def test_an_unusable_reply_is_model_unavailable(ollama: str, reply: Any) -> None:
     _Ollama.reply = reply
