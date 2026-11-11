@@ -72,7 +72,7 @@ _EXCLUDED_SUFFIXES = (
 _PRODUCT_COPY_DIRS = ("universe/docs/", "kb/docs/")
 # Generated run summaries quote the model's replies word for word ("I have saved your details").
 # The wording rules do not apply there either; every other check does.
-_GENERATED_DIRS = ("eval/reports/dev/",)
+_GENERATED_DIRS = ("eval/reports/dev/", "eval/reports/sealed/")
 
 
 @dataclass(frozen=True)
