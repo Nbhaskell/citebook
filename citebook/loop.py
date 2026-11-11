@@ -47,7 +47,7 @@ from citebook.providers.base import Message, ModelProvider, ModelTurn, ModelUnav
 from citebook.reply_checks import Allowed, CheckResult, build_allowed, check_reply, feedback
 from citebook.screening import emergency_reply, screen_message
 from citebook.timeutil import to_utc_text
-from citebook.tools.common import load_settings, price_book, safety
+from citebook.tools.common import SAY_CARD, load_settings, price_book, safety
 from citebook.tools.registry import REGISTRY, offered_tools
 from citebook.tools.runner import run_tool_call
 from citebook.verification import LIMIT_SAY
@@ -498,12 +498,16 @@ class _Turn:
         if self.checked_reply(draft, messages, state) == "text":
             # Shown only beside a reply that passed its checks; never with a fallback.
             self.result.slots, self.result.quote = self.slots, self.quote
-            for action_id in reversed(self.card_actions):
-                card = _card(self.conn, action_id)
-                if card is not None:
-                    self.result.card = card
-                    break
+            self.result.card = self.turn_card()
         return self.finish()
+
+    def turn_card(self) -> Card | None:
+        """The newest card made this turn that is still open."""
+        for action_id in reversed(self.card_actions):
+            card = _card(self.conn, action_id)
+            if card is not None:
+                return card
+        return None
 
     def tool_loop(self, messages: list[Message]) -> str | None:
         """Call the model and run its tool calls until it answers in text. None when the turn
@@ -583,7 +587,7 @@ class _Turn:
         """Check the draft. On failure the model writes it again once, and may use tools within
         the turn's remaining budget (for example to create the card it talked about)."""
         draft = plain_text(draft)
-        if self.result.card is None and _ASKS_TO_PROCEED.search(draft):
+        if not self.card_actions and _ASKS_TO_PROCEED.search(draft):
             messages.append({"role": "assistant", "content": draft})
             messages.append({"role": "system", "content": CARD_NUDGE})
             nudged = self.tool_loop(messages)
@@ -612,6 +616,10 @@ class _Turn:
             attempts.append(check_reply(second_text, self.allowed(state)))
             if second_text.strip() and all(r.passed for r in attempts[1]):
                 final = second_text
+            elif card := self.turn_card():
+                # A card was made this turn: its fixed sentence, written by code, says what
+                # happens next, so the customer keeps the card instead of a handoff (D-074).
+                final = SAY_CARD[ActionType(card.action_type)]
             else:
                 final, kind = FALLBACK, "fallback"
         message_id = (

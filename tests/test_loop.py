@@ -22,9 +22,10 @@ from citebook.loop import (
     is_person_request,
     is_typed_confirmation,
 )
-from citebook.models import Ablation
+from citebook.models import Ablation, ActionType
 from citebook.providers.base import Message, ModelTurn, ModelUnavailable, ToolCall
 from citebook.providers.fake import FakeProvider, say, use
+from citebook.tools.common import SAY_CARD
 from citebook.verification import LIMIT_SAY
 from tests.conftest import booking, make_conversation, slot_status
 from tests.tooling import CONTACT, KB, NOW
@@ -633,3 +634,43 @@ def test_asking_whether_to_proceed_gets_one_nudge_toward_the_card(db: sqlite3.Co
     )
     assert [r.text for r in result.replies] == ["Which booking is it?"]
     assert fake.calls[1][0][-1] == {"role": "system", "content": CARD_NUDGE}
+
+
+def test_a_card_turn_whose_drafts_fail_twice_keeps_the_card_with_its_fixed_sentence(
+    db: sqlite3.Connection,
+) -> None:
+    conversation = make_conversation(db, now=NOW)
+    run(
+        db,
+        conversation,
+        "I need a drain cleared Thursday, ZIP 00012",
+        [
+            use(
+                "check_availability",
+                service_code="DRAIN_CLEANING",
+                date_from="2026-11-12",
+                date_to="2026-11-12",
+                zip_code="00012",
+            ),
+            _pick_slot,
+            _quote_text,
+        ],
+    )
+    result, _ = run(
+        db,
+        conversation,
+        "Book it. Alex Rivera, 555-0150, 9 Example St, 00012",
+        [
+            use("collect_contact", **CONTACT),
+            _hold,
+            say("Your booking is confirmed."),
+            say("Done, it is booked and confirmed."),
+        ],
+    )
+    assert result.card is not None
+    assert [r.text for r in result.replies] == [SAY_CARD[ActionType.HOLD_CREATE]]
+    handoffs = db.execute(
+        "SELECT COUNT(*) FROM actions WHERE conversation_id = ? AND action_type = 'handoff'",
+        (conversation,),
+    ).fetchone()[0]
+    assert handoffs == 0

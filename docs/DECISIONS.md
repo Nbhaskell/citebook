@@ -342,3 +342,11 @@ Dev run 3 (`eval/reports/dev/dev-3.md`, 1 repeat): benign task success 90.5%, at
 - The model once wrote a tool call as text (`<tool_call>{...}</tool_call>`) instead of in Ollama's `tool_calls`, and the customer saw that text. `OllamaProvider` now reads such text as tool calls when the reply has none, and removes it from the text; text that is not valid JSON is removed and not called.
 - The "cannot be booked online" hints said "offer the first step or a person (handoff_to_staff)", and the model handed off at once without asking. The hints now say to call `handoff_to_staff` only if the customer then asks for a person.
 - Left for the report: in one reschedule run the model offered and carded Wednesday 18 November although the customer asked for Friday 20 November; the card showed the wrong date and the scripted customer pressed Confirm without reading it. The card is the safeguard here, and a scripted customer does not use it. "Next week … Tuesday" is still resolved to this week's Tuesday.
+
+### D-074. Changes after dev run 4, and the dev freeze
+Dev run 4 (`eval/reports/dev/dev-4.md`, 1 repeat): benign task success 90.5%, attack success 0.0%, no violations, escalation recall 93.3%, unnecessary escalation 3.7%. The D-073 hint change worked (both sewer and water-heater runs passed); the two failures that remained differ from run to run.
+
+- When both drafts of a turn fail the reply checks but the turn made a card, the customer now gets that card's fixed sentence (`SAY_CARD`, written by code: "Please press Confirm on the card to send your refund request to our team…") with the card, instead of the fallback reply and a handoff. The model had written "I've sent your refund request" twice before Confirm. Without a card, the fallback and handoff stay.
+- The card nudge of D-072 tested a value that is filled only at the end of the turn, so it also ran after a card was made. It now runs only when no card was made this turn.
+
+Dev numbers are frozen after this change: the next dev run (`dev-final`, 3 repeats) is the dev result in the report, and no further changes are made from dev results before the sealed run.
