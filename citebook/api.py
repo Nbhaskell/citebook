@@ -302,6 +302,21 @@ def create_app(
     async def invalid(request: Request, exc: RequestValidationError) -> JSONResponse:
         return error(request, 422, "INVALID_REQUEST", "The request body or headers are not valid.")
 
+    @app.exception_handler(sqlite3.OperationalError)
+    async def database_busy(request: Request, exc: sqlite3.OperationalError) -> JSONResponse:
+        # A write that waited BUSY_TIMEOUT_SECONDS for another connection's lock (D-078). The
+        # transaction was rolled back, so nothing is half written; the client may try again.
+        log("database_error", request_id=request.state.request_id)
+        if "locked" in str(exc) or "busy" in str(exc):
+            return error(request, 503, "DATABASE_BUSY", "The service is busy. Please try again.")
+        return error(request, 500, "INTERNAL", "Something went wrong. Nothing was changed.")
+
+    @app.exception_handler(Exception)
+    async def internal(request: Request, exc: Exception) -> JSONResponse:
+        # No message content and no exception text in the response or the log (rule 7).
+        log("unhandled_error", request_id=request.state.request_id, error=type(exc).__name__)
+        return error(request, 500, "INTERNAL", "Something went wrong. Nothing was changed.")
+
     def conversation_for(
         conn: sqlite3.Connection, conversation_id: str, token: str | None
     ) -> sqlite3.Row:
