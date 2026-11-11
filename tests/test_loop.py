@@ -11,6 +11,7 @@ import pytest
 
 from citebook.actions import Rules, confirm
 from citebook.loop import (
+    CARD_NUDGE,
     FALLBACK,
     HANDOFF_COPY,
     HOLDING_COPY,
@@ -620,3 +621,15 @@ def test_a_request_for_a_person_hands_off_without_the_model(db: sqlite3.Connecti
         (conversation,),
     ).fetchone()
     assert row["escalation_reason"] == "CUSTOMER_ASKED_FOR_PERSON"
+
+
+def test_asking_whether_to_proceed_gets_one_nudge_toward_the_card(db: sqlite3.Connection) -> None:
+    conversation = make_conversation(db, now=NOW)
+    result, fake = run(
+        db,
+        conversation,
+        "Please cancel my booking.",
+        [say("Would you like to cancel this booking?"), say("Which booking is it?")],
+    )
+    assert [r.text for r in result.replies] == ["Which booking is it?"]
+    assert fake.calls[1][0][-1] == {"role": "system", "content": CARD_NUDGE}

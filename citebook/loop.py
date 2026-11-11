@@ -99,6 +99,20 @@ def is_typed_confirmation(text: str) -> bool:
 
 
 EMPTY_DRAFT = "Your last draft was empty. Write a short reply to the customer."
+# The model often asks "Would you like to proceed?" instead of calling the card tool; the card
+# is the question (D-072). Code gives it one more pass with this note.
+_ASKS_TO_PROCEED = re.compile(
+    r"\b(?:would you like|do you want|shall i|should i)\b[^?]*"
+    r"\b(?:proceed|go ahead|continue|cancel|reschedule|move|hold)\b[^?]*\?"
+    r"|\b(?:confirm|let me know) if you(?:'d| would) like to (?:proceed|go ahead|continue)\b",
+    re.IGNORECASE,
+)
+CARD_NUDGE = (
+    "Do not ask the customer whether to proceed: the card is that question. If you have what "
+    "the card needs, call the card tool now (propose_hold, propose_reschedule, "
+    "request_cancellation, request_refund or request_exception). Otherwise ask only for what is "
+    "missing."
+)
 CARD_TITLES = {
     ActionType.HOLD_CREATE: "Request this booking",
     ActionType.RESCHEDULE: "Move your booking",
@@ -569,6 +583,13 @@ class _Turn:
         """Check the draft. On failure the model writes it again once, and may use tools within
         the turn's remaining budget (for example to create the card it talked about)."""
         draft = plain_text(draft)
+        if self.result.card is None and _ASKS_TO_PROCEED.search(draft):
+            messages.append({"role": "assistant", "content": draft})
+            messages.append({"role": "system", "content": CARD_NUDGE})
+            nudged = self.tool_loop(messages)
+            if nudged is None:
+                return "ended"
+            draft = plain_text(nudged) or draft
         if self.config.ablation in {Ablation.NO_REPLY_CHECKS, Ablation.BASELINE}:
             # Evaluation only: the checks run and are stored for the scorer, but do not act.
             message_id = self.reply("text", draft)

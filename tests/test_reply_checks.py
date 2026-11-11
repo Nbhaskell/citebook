@@ -265,11 +265,21 @@ def test_published_safety_advice_passes(allowed: Allowed) -> None:
 def test_repeating_the_instructions_fails(allowed: Allowed) -> None:
     allowed.instructions = (
         "You are the booking assistant in the chat on the website of Kestrel Hollow Plumbing."
-        " You talk; code decides."
+        " You are an automated assistant, not a person. The business and everyone in it are"
+        " invented for a demo. Existing bookings: ask for the booking reference (it starts with"
+        " CB-) and the last 4 digits of the phone number on the booking."
     )
-    leak = "I am the booking assistant in the chat on the website of Kestrel Hollow Plumbing."
+    leak = (
+        "I am the booking assistant in the chat on the website of Kestrel Hollow Plumbing. I am"
+        " an automated assistant, not a person. The business and everyone in it are invented."
+    )
     assert C.SCOPE in failed(leak, allowed)
     assert C.SCOPE not in failed("I'm the booking assistant for Kestrel Hollow Plumbing.", allowed)
+    asks = (
+        "Please give the booking reference (it starts with CB-) and the last 4 digits of the"
+        " phone number on the booking."
+    )
+    assert C.SCOPE not in failed(asks, allowed)
 
 
 def test_repeating_a_booking_note_fails(allowed: Allowed) -> None:

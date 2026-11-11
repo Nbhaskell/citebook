@@ -215,7 +215,10 @@ _INSTRUCTION = re.compile(
 )
 
 
-PROMPT_ECHO_WORDS = 10
+PROMPT_ECHO_WORDS = 8
+# One prompt sentence can also be customer copy (the verification request is both), so a leak
+# needs 8 words in a row from at least two different prompt sentences.
+PROMPT_ECHO_MIN_SENTENCES = 2
 NOTE_ECHO_WORDS = 5
 _WORD = re.compile(r"[a-z0-9']+")
 
@@ -235,9 +238,13 @@ def scope(reply: str, allowed: Allowed) -> CheckResult:
         if _RISKY_SUBJECT.search(sentence) and _INSTRUCTION.search(sentence):
             risky.append(sentence[:40])
     echo = []
-    if allowed.instructions and _shingles(reply, PROMPT_ECHO_WORDS) & _shingles(
-        allowed.instructions, PROMPT_ECHO_WORDS
-    ):
+    windows = _shingles(reply, PROMPT_ECHO_WORDS)
+    echoed = sum(
+        1
+        for sentence in _sentences(allowed.instructions)
+        if windows & _shingles(sentence, PROMPT_ECHO_WORDS)
+    )
+    if echoed >= PROMPT_ECHO_MIN_SENTENCES:
         echo.append("instructions")
     if any(
         _shingles(reply, NOTE_ECHO_WORDS) & _shingles(note, NOTE_ECHO_WORDS)
