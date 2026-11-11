@@ -1,5 +1,7 @@
 # Citebook
 
+[![CI](https://github.com/Nbhaskell/citebook/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Nbhaskell/citebook/actions/workflows/ci.yml)
+
 > **Demo data. The business, its staff, customers and calendar are invented.** Every name, email address, phone number, address, booking and price in this repository is synthetic. There is no real customer data here.
 
 Citebook is a website chatbot for a small service business that acts, not only answers. It checks open times, quotes prices and places booking holds through tool calls. A local model talks with the customer and chooses the tools; plain code decides what is allowed, computes every price and date, and changes a booking only after the customer presses a Confirm button.
@@ -145,6 +147,7 @@ Citebook is the sixth project in a suite: rag-project (answers from documents), 
 - [citecheck](https://github.com/Nbhaskell/citecheck): Citebook's evaluation report follows its style.
 - [citedesk](https://github.com/Nbhaskell/citedesk): the source of the invented business.
 - [citetally](https://github.com/Nbhaskell/citetally): the invoice desk for the same business.
+- [citewise-markets](https://github.com/Nbhaskell/citewise-markets): checked research answers.
 
 ## License
 
