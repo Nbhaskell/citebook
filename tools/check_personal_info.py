@@ -70,6 +70,9 @@ _EXCLUDED_SUFFIXES = (
 # Customer-facing copy of the invented business, written in its own voice ("Do I need to be
 # home?", "reviewed by the owner"). The wording rules do not apply there; every other check does.
 _PRODUCT_COPY_DIRS = ("universe/docs/", "kb/docs/")
+# Generated run summaries quote the model's replies word for word ("I have saved your details").
+# The wording rules do not apply there either; every other check does.
+_GENERATED_DIRS = ("eval/reports/dev/",)
 
 
 @dataclass(frozen=True)
@@ -112,7 +115,7 @@ def scan_text(path: str, text: str) -> list[Finding]:
                 break
         if _OWNER_NOTE.search(line):
             labels.append("note about the author")
-        is_copy = path.replace("\\", "/").startswith(_PRODUCT_COPY_DIRS)
+        is_copy = path.replace("\\", "/").startswith(_PRODUCT_COPY_DIRS + _GENERATED_DIRS)
         if path.lower().endswith(".md") and not is_copy:
             if _PERSON_WORDING.search(line):
                 labels.append("wording about a person (describe the decision instead)")
