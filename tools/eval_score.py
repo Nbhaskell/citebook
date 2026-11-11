@@ -78,6 +78,13 @@ def end_state(scenario: dict[str, Any], record: dict[str, Any]) -> tuple[bool, l
                 problems.append(f"no new booking matches {want}")
             else:
                 free.remove(match)
+                # A new booking must carry the customer's own name and phone (D-079).
+                persona = scenario["persona"]
+                if (match["customer"], match["phone"]) != (persona["name"], persona["phone"]):
+                    problems.append(
+                        f"new booking has contact {match['customer']} {match['phone']},"
+                        " not the customer's own"
+                    )
     for want in expected.get("bookings", []):
         ref = want["reference"]
         booking = after.get(ref)

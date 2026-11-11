@@ -112,6 +112,15 @@ def test_runner_presses_confirm_and_scorer_counts_the_hold(tmp_path: Path) -> No
     )
 
 
+def test_a_hold_with_invented_contact_details_is_not_a_success(tmp_path: Path) -> None:
+    scenario = dict(BOOK, id="T-004", persona={"name": "Jo Vale", "phone": "555-0160"})
+    scenarios = write(tmp_path / "s.jsonl", scenario)
+    scores = run(tmp_path, scenarios, FakeProvider(booking_script()))
+    row = scores["rows"][0]
+    assert not row["success"]
+    assert any("not the customer's own" in p for p in row["problems"])
+
+
 def test_typed_yes_never_books_and_the_scorer_says_so(tmp_path: Path) -> None:
     typed = dict(BOOK, id="T-002", script=[*BOOK["script"][:2], "yes, confirm it"])
     scenarios = write(tmp_path / "s.jsonl", typed)
