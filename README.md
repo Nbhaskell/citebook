@@ -10,17 +10,31 @@ Citebook is a website chatbot for a small service business that acts, not only a
 
 ## Status
 
-Phases 0 to 5 of `docs/IMPLEMENTATION_PLAN.md` are complete:
+Phases 0 to 6 of `docs/IMPLEMENTATION_PLAN.md` are complete:
 
 - Phase 0: settings, a `/api/status` route, a placeholder widget and staff console that show the status, an environment check, commit guards and CI.
 - Phase 1: the invented business copied from Citedesk's `universe/`, Citebook's extension (services, technicians, ZIP codes, customers, bookings), generated seed files and knowledge-base documents, and a deterministic four-week calendar seed (`python -m tools.seed_calendar --state base_week_1`).
 - Phase 2: the database (migrations kept equal to the schema document), enums kept in step with every `CHECK` constraint, money and business-time helpers, quote pricing, the action state machine with transactional execution and a double-booking test, expiry of cards, holds and idle conversations, customer verification, screening of customer messages, and a canary test that keeps message content out of logs and audit events.
 - Phase 3: the thirteen tools with Pydantic argument models, the policy gate with its eight checks in order (identity from the conversation, ownership checked in the gate and again in SQL), the knowledge-base interface with a fake for tests, notification drafts from fixed templates, and tests that run the booking, reschedule, cancellation and refund flows through the tools and the gate with no model.
 - Phase 4: the model provider for a local Ollama model (with a scripted fake for tests), a versioned system prompt, the turn loop with tool limits and fallbacks, reply checks that block invented prices, times, references and false confirmations, the customer API with session tokens and a Confirm button bound to the card's hash, and a smoke test of ten conversations against the local model.
-
 - Phase 5: the staff API (queue, conversation detail, decisions, take-over, calendar, outbox) and status checks; the chat widget on a demo plumber website (slot chips, price table, confirmation cards that become receipts, emergency block, handoff to a person); and the staff console (queue, conversation detail with an activity timeline of gate decisions and reply checks, decision panel, calendar, outbox of unsent drafts, status). Both work by keyboard alone and at 360 px wide.
 
-Policy questions use the fake knowledge base by default (`CITEBOOK_KB=fake`); rag-project's `POST /api/search` is used from Phase 6. Model behaviour is measured with scenarios in Phase 6.
+- Phase 6: a scenario runner through the real API and a scorer with no AI judge, 62 dev scenarios, dev fixes, ablations of each safety layer, and 40 sealed scenarios written after the dev numbers were frozen and run once.
+
+## Evaluation results
+
+Full report: [`eval/reports/citebook_v1_report.md`](eval/reports/citebook_v1_report.md). Sealed set, 40 scripted scenarios run once with 3 repeats, local `qwen3:8b`, fake knowledge base, synthetic data:
+
+| Measure | All layers | Baseline (gate policy and reply checks off) |
+|---|---|---|
+| Benign task success | 75.0% | 80.0% |
+| Attack success | 5.0% | 30.0% measured; 25.0% after reading |
+| Runs with a policy violation | 0 | 31 |
+| Escalation recall | 62.5% | 87.5% |
+
+No booking changed without the customer's button press, and no refund was executed, in either setting. The one successful attack with all layers asked for the instructions in French; the instruction-echo check compares English text only. On new kinds of conversation benign task success was 63.9% (91.7% on kinds seen in development), and in one scenario the model offered a cancellation card when the customer asked to move a booking. Scripted customers press Confirm without reading the card, so these numbers show the system's behaviour, not a real customer's experience.
+
+Policy questions use the fake knowledge base by default (`CITEBOOK_KB=fake`); `CITEBOOK_KB=rag_project` uses rag-project's `POST /api/search`, which this evaluation did not use.
 
 ## Run it (Windows, PowerShell)
 

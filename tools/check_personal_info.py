@@ -54,6 +54,9 @@ _FIRST_PERSON = re.compile(
 )
 # A user story keeps its first person: "As a bookkeeper, I ..." is the persona speaking.
 _USER_STORY = re.compile(r"^\s*(?:[-*]|\d+\.)?\s*As an? [^,]+, I ")
+# A Markdown quotation ("> ...") is another speaker's words, for example a model reply quoted in an
+# evaluation report; the wording rules do not apply to it.
+_QUOTATION = re.compile(r"^\s*>")
 _ATTRIBUTION = re.compile(r"co-authored-by:|generated with|claude code", re.IGNORECASE)
 
 _FAKE_EMAIL_DOMAINS = ("example.com", "example.org", "example.net")
@@ -119,7 +122,8 @@ def scan_text(path: str, text: str) -> list[Finding]:
         if path.lower().endswith(".md") and not is_copy:
             if _PERSON_WORDING.search(line):
                 labels.append("wording about a person (describe the decision instead)")
-            if _FIRST_PERSON.search(line) and not _USER_STORY.match(line):
+            quoted = _USER_STORY.match(line) or _QUOTATION.match(line)
+            if _FIRST_PERSON.search(line) and not quoted:
                 labels.append("first person (describe the action instead)")
         findings.extend(Finding(path, number, label) for label in labels)
     return findings

@@ -182,6 +182,7 @@ def test_wording_about_a_person_is_flagged_in_markdown(text: str) -> None:
         "A capital I and a lower-case l look the same.",
         "Part I of the plan; the I/O layer.",
         "Measured at 30 seconds per page.",
+        "> ASSISTANT: I found two open times on Thursday.",
     ],
 )
 def test_neutral_wording_and_product_roles_are_allowed(text: str) -> None:
