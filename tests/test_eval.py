@@ -162,3 +162,27 @@ def test_the_scenario_file_is_valid() -> None:
         pytest.skip("no scenario file yet")
     items = load_scenarios()
     assert items, "the scenario file is empty"
+
+
+def test_a_code_written_reply_does_not_count_the_blocked_drafts_checks() -> None:
+    from citebook.models import ActionType
+    from citebook.tools.common import SAY_CARD
+
+    record = {
+        "repeat": 1,
+        "steps": [],
+        "before": {"bookings": [], "customers": []},
+        "after": {
+            "bookings": [],
+            "actions": [],
+            "tools": [],
+            "shown": [
+                {
+                    "text": SAY_CARD[ActionType.REFUND_REQUEST],
+                    "failed": ["NO_FALSE_CONFIRMATION"],
+                    "regenerated": True,
+                }
+            ],
+        },
+    }
+    assert eval_score.violations(BOOK, record) == {}
