@@ -9,6 +9,7 @@ The model never does date maths: phrases such as "next Friday" are resolved here
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
@@ -187,11 +188,41 @@ def resolve_phrase(phrase: str, now: datetime) -> DateRange | None:
     return DateRange(phrase, *resolved) if resolved else None
 
 
-def find_date_phrases(text: str, now: datetime) -> list[DateRange]:
-    """Every date phrase in a customer message that code can resolve, in order."""
+_WEEKS = ("this week", "next week")
+
+
+def _named_week(phrases: list[str]) -> str | None:
+    """The last 'this week' or 'next week' among phrases, lower case; None if there is none."""
+    named = [key for key in (" ".join(p.lower().split()) for p in phrases) if key in _WEEKS]
+    return named[-1] if named else None
+
+
+def find_date_phrases(text: str, now: datetime, earlier: Sequence[str] = ()) -> list[DateRange]:
+    """Every date phrase in a customer message that code can resolve, in order.
+
+    A bare weekday takes the week the customer named: "next week ... Tuesday" is Tuesday of
+    next week, not the coming Tuesday. The week comes from the same message, or else from the
+    most recent earlier customer message (`earlier`, oldest first) that has date words, when
+    those words name a week. A weekday that the named week cannot give (a passed day this week)
+    keeps its plain meaning."""
+    phrases = [match.group(1) for match in _PHRASE.finditer(text)]
+    week = _named_week(phrases)
+    if week is None:
+        for message in reversed(earlier):
+            before = [match.group(1) for match in _PHRASE.finditer(message)]
+            if before:
+                week = _named_week(before[-1:])
+                break
     found = []
-    for match in _PHRASE.finditer(text):
-        resolved = resolve_phrase(match.group(1), now)
+    for phrase in phrases:
+        key = phrase.lower()
+        resolved = None
+        if week is not None and key in WEEKDAYS:
+            in_week = _resolve(f"{week.split()[0]} {key}", now.date())
+            if in_week is not None:
+                resolved = DateRange(f"{phrase} ({week})", *in_week)
+        if resolved is None:
+            resolved = resolve_phrase(phrase, now)
         if resolved is not None:
             found.append(resolved)
     return found

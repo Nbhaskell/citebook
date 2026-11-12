@@ -163,6 +163,61 @@ def test_find_date_phrases_in_a_message() -> None:
     ]
 
 
+def test_a_weekday_takes_the_week_named_in_the_same_message() -> None:
+    found = find_date_phrases("Next week, Tuesday morning if possible.", THURSDAY)
+    assert [(f.phrase, f.first.isoformat(), f.last.isoformat()) for f in found] == [
+        ("Next week", "2026-11-16", "2026-11-22"),
+        ("Tuesday (next week)", "2026-11-17", "2026-11-17"),
+    ]
+    # The week may also come after the weekday.
+    found = find_date_phrases("Friday, but next week please", THURSDAY)
+    assert [(f.phrase, f.first.isoformat()) for f in found] == [
+        ("Friday (next week)", "2026-11-20"),
+        ("next week", "2026-11-16"),
+    ]
+
+
+def test_a_weekday_takes_the_week_from_an_earlier_message() -> None:
+    # S-010: "sometime next week", then "Tuesday morning" in the next message.
+    earlier = ["Hi, I need someone to look at a clogged tub drain sometime next week."]
+    found = find_date_phrases("ZIP 00014. Tuesday morning if possible.", THURSDAY, earlier)
+    assert [(f.phrase, f.first.isoformat()) for f in found] == [
+        ("Tuesday (next week)", "2026-11-17"),
+    ]
+
+
+def test_only_the_latest_earlier_date_words_give_a_week() -> None:
+    earlier = ["Anything next week?", "Actually, tomorrow would be better."]
+    found = find_date_phrases("Or Tuesday.", THURSDAY, earlier)
+    assert [(f.phrase, f.first.isoformat()) for f in found] == [("Tuesday", "2026-11-17")]
+    # Here the plain answer is the same day; on a Monday the two readings differ.
+    monday = at("2026-11-09T09:00")
+    found = find_date_phrases("Or Tuesday.", monday, ["Anything next week?"])
+    assert [(f.phrase, f.first.isoformat()) for f in found] == [
+        ("Tuesday (next week)", "2026-11-17")
+    ]
+    found = find_date_phrases("Or Tuesday.", monday, ["Anything next week?", "Or tomorrow?"])
+    assert [(f.phrase, f.first.isoformat()) for f in found] == [("Tuesday", "2026-11-10")]
+
+
+def test_a_named_week_does_not_change_next_or_this_weekdays() -> None:
+    found = find_date_phrases("This Saturday, or next Friday, any time next week", THURSDAY)
+    assert [(f.phrase, f.first.isoformat()) for f in found] == [
+        ("This Saturday", "2026-11-14"),
+        ("next Friday", "2026-11-20"),
+        ("next week", "2026-11-16"),
+    ]
+
+
+def test_a_passed_weekday_this_week_keeps_its_plain_meaning() -> None:
+    found = find_date_phrases("This week, Monday or Friday", THURSDAY)
+    assert [(f.phrase, f.first.isoformat()) for f in found] == [
+        ("This week", "2026-11-12"),
+        ("Monday", "2026-11-16"),
+        ("Friday (this week)", "2026-11-13"),
+    ]
+
+
 def test_find_date_phrases_ignores_words_inside_words() -> None:
     assert find_date_phrases("My name is Monday-Smith and I like todays news", THURSDAY) == []
 

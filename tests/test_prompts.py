@@ -50,6 +50,11 @@ def test_the_state_block_resolves_the_customers_date_words(rules: Rules) -> None
     assert "'next week' means Monday 16 November 2026 (2026-11-16) to Sunday 22 November" in week
 
 
+def test_the_state_block_reads_the_week_from_earlier_customer_messages(rules: Rules) -> None:
+    text = block(rules, "Wednesday works", earlier_customer_texts=["Anything next week?"])
+    assert "'Wednesday (next week)' means Wednesday 18 November 2026 (2026-11-18)." in text
+
+
 def test_the_state_block_lists_coming_days_and_closed_ones(rules: Rules) -> None:
     text = block(rules)
     assert text.startswith("BEGIN STATE") and text.endswith("END STATE")

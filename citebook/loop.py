@@ -459,9 +459,19 @@ class _Turn:
             "SELECT summary FROM actions WHERE conversation_id = ? AND status = 'proposed'",
             (self.conversation_id,),
         ).fetchone()
+        # The current message is already stored (run() adds it first), so drop the last one.
+        earlier = [
+            row["content"]
+            for row in self.conn.execute(
+                "SELECT content FROM messages WHERE conversation_id = ? AND role = 'customer'"
+                " ORDER BY seq",
+                (self.conversation_id,),
+            )
+        ][:-1]
         return state_block(
             self.rules.clock.local(self.now),
             customer_text,
+            earlier_customer_texts=earlier,
             clock=self.rules.clock,
             status=conversation["status"],
             contact_collected=conversation["verification_state"] != "anonymous",

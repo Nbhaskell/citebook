@@ -110,6 +110,18 @@ def test_date_words_are_resolved_in_the_state_block(db: sqlite3.Connection) -> N
     )
 
 
+def test_a_weekday_takes_the_week_from_the_customers_earlier_message(
+    db: sqlite3.Connection,
+) -> None:
+    # S-010: on Monday 9 November, "next week" and then "Tuesday" mean Tuesday 17 November.
+    conversation = make_conversation(db, now=NOW)
+    run(db, conversation, "A tub drain is clogged. Sometime next week?", [say("Which day?")])
+    _, fake = run(db, conversation, "Tuesday morning if possible.", [say("Your ZIP code?")])
+    state = fake.calls[0][0][1]["content"]
+    assert "'Tuesday (next week)' means Tuesday 17 November 2026 (2026-11-17)." in state
+    assert "2026-11-10)." not in state.split("Coming days:")[0]
+
+
 def test_earlier_tool_results_stay_in_the_history(db: sqlite3.Connection) -> None:
     conversation = make_conversation(db, now=NOW)
     run(

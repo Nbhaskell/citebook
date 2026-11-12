@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cache
@@ -71,8 +72,11 @@ def state_block(
     verified_reference: str | None,
     open_card: str | None,
     services: list[ServiceLine] | None = None,
+    earlier_customer_texts: Sequence[str] = (),
 ) -> str:
-    """The STATE block code writes for each turn. Every date in it comes from code."""
+    """The STATE block code writes for each turn. Every date in it comes from code.
+
+    `earlier_customer_texts` (oldest first) give the week a bare weekday falls in (D-081)."""
     hour = now_local.hour % 12 or 12
     now_text = f"{hour}:{now_local.minute:02d} {'AM' if now_local.hour < 12 else 'PM'}"
     lines = [
@@ -80,7 +84,7 @@ def state_block(
         f"Now: {now_local:%A} {now_local.day} {now_local:%B} {now_local.year}, {now_text}, "
         "business time.",
     ]
-    phrases = find_date_phrases(customer_text, now_local)
+    phrases = find_date_phrases(customer_text, now_local, earlier_customer_texts)
     if phrases:
         lines.append("Date words in the customer's last message:")
         lines.extend(f"- {_range(found, now_local)}" for found in phrases)
