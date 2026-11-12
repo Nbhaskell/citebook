@@ -412,3 +412,14 @@ A dev run with D-081 to D-083 together (`day-check`, all 62 dev scenarios, 1 rep
 With no date words the result is the earliest windows, as before. This changes what a tool returns, not what the gate allows, so the ablations do not turn it off. The tool description does not change, so the prompt version stays `prompt-v4`.
 
 A full dev run with only the first two points (`avail-check`, 1 repeat) gave the same numbers as D-083's run: S-013 then listed the Friday windows but failed later on a refused hold, and S-015 still searched without the customer's day. With the third point, the 5 dev reschedule and S-013 runs (`avail-check-2`, 1 repeat) gave 4 of 5: S-013 succeeds, and S-015 moves the booking to Friday 20 November, the right day, but to a morning window when the customer asked for the afternoon.
+
+### D-085. Handoff reasons that code can check
+Escalation recall on the sealed set was 62.5%, partly because the model handed off with a wrong reason or too early. `handoff_to_staff` now has a policy check (`POLICY_BLOCKED`), so the `no_gate_policy` and `baseline` ablations turn it off:
+
+- `verification_pending`: after a failed verification, while the customer can still try again, the reasons `OUT_OF_SERVICE_AREA`, `NOT_IN_KNOWLEDGE_BASE` and `POLICY_EXCEPTION` are refused. The refusal gives the model the customer's sentence from the verification code (`FAILED_SAY`). After the last failed try, code hands off with `VERIFICATION_FAILED` as before. In S-110 the model handed off as `OUT_OF_SERVICE_AREA` after one wrong pair of digits. `CUSTOMER_ASKED_FOR_PERSON` and `SUSPICIOUS_INPUT` are not refused.
+- `use_request_exception`: with a verified booking, `POLICY_EXCEPTION` is refused, and the model is told to use `request_exception`, which the customer confirms on a card (S-112).
+- `no_unserved_zip`: `OUT_OF_SERVICE_AREA` is refused when the customer has written no 5-digit number outside the served ZIP codes.
+
+The first wording of the `verification_pending` refusal spoke about "the customer", and the model copied it to the customer word for word; the refusal now carries the customer's sentence as it is.
+
+Dev check (16 dev scenarios that escalate or touch service area, verification or exceptions; 1 repeat): 16 of 16 succeed, escalation recall 100%, and none of the new refusals fired, so the dev set does not exercise them. S-110 and S-112 of the spent sealed set were each run once as a check, not as a result. S-110 succeeds: the customer is asked twice to check the details and the third failure escalates as `VERIFICATION_FAILED`. S-112 is not fixed: after the refusal the model wrote a reply that said the booking had already been moved the most times allowed, and the `NO_FALSE_CONFIRMATION` check read "moved" as a false claim twice, so code handed off as `REPLY_CHECK_FAILED`. That is the false alarm known from S-140 and is a separate fix.

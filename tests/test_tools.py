@@ -532,3 +532,68 @@ def test_handoff_needs_no_confirm(db: sqlite3.Connection) -> None:
 def test_the_model_cannot_claim_an_emergency_or_loop_reason(db: sqlite3.Connection) -> None:
     envelope = call(db, make_conversation(db), "handoff_to_staff", {"reason": "EMERGENCY"})
     assert decision(envelope) == "INVALID_ARGUMENTS"
+
+
+# --- handoff_to_staff: reasons code can check (D-085) -------------------------------------------
+
+
+def _handoff(conn: sqlite3.Connection, conversation: str, reason: str) -> dict[str, object]:
+    return call(conn, conversation, "handoff_to_staff", {"reason": reason})
+
+
+@pytest.mark.parametrize(
+    ("reason", "allowed"),
+    [
+        ("OUT_OF_SERVICE_AREA", False),
+        ("POLICY_EXCEPTION", False),
+        ("NOT_IN_KNOWLEDGE_BASE", False),
+        ("CUSTOMER_ASKED_FOR_PERSON", True),
+        ("SUSPICIOUS_INPUT", True),
+    ],
+)
+def test_a_handoff_waits_while_verification_can_still_succeed(
+    db: sqlite3.Connection, reason: str, allowed: bool
+) -> None:
+    # S-110: one wrong pair of digits, then a handoff as OUT_OF_SERVICE_AREA.
+    conversation = make_conversation(db)
+    add_message(db, conversation, "customer", "Cancel CB-6RJZ3K please, phone ends 0000.", NOW)
+    db.execute("UPDATE conversations SET verification_failures = 1 WHERE id = ?", (conversation,))
+    envelope = _handoff(db, conversation, reason)
+    if allowed:
+        ok(envelope)
+    else:
+        assert decision(envelope) == "POLICY_BLOCKED"
+        assert str(envelope["say"]).startswith("Do not hand off yet: the customer can try again.")
+
+
+def test_a_policy_exception_with_a_verified_booking_is_a_card(db: sqlite3.Connection) -> None:
+    # S-112: the third move was refused, and the model handed off instead of a card.
+    conversation = verified(db)
+    add_message(db, conversation, "customer", "Please ask the team to make an exception.", NOW)
+    envelope = _handoff(db, conversation, "POLICY_EXCEPTION")
+    assert decision(envelope) == "POLICY_BLOCKED"
+    assert str(envelope["say"]).startswith("Use request_exception")
+    anonymous = make_conversation(db)
+    add_message(db, anonymous, "customer", "Can you make an exception for me?", NOW)
+    ok(_handoff(db, anonymous, "POLICY_EXCEPTION"))
+
+
+@pytest.mark.parametrize(
+    ("text", "allowed"),
+    [
+        ("I'm at ZIP 99999, can you come?", True),
+        ("Cancel CB-6RJZ3K please, phone ends 0000.", False),
+        ("I'm in 00012.", False),  # a served ZIP code
+    ],
+)
+def test_out_of_service_area_needs_a_zip_code_that_is_not_served(
+    db: sqlite3.Connection, text: str, allowed: bool
+) -> None:
+    conversation = make_conversation(db)
+    add_message(db, conversation, "customer", text, NOW)
+    envelope = _handoff(db, conversation, "OUT_OF_SERVICE_AREA")
+    if allowed:
+        ok(envelope)
+    else:
+        assert decision(envelope) == "POLICY_BLOCKED"
+        assert str(envelope["say"]).startswith("The customer has not given a ZIP code")
