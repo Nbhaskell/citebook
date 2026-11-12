@@ -235,6 +235,42 @@ def test_a_move_claim_next_to_a_count_still_fails(allowed: Allowed, reply: str) 
     assert C.NO_FALSE_CONFIRMATION in failed(reply, allowed)
 
 
+@pytest.mark.parametrize(
+    "reply",
+    [
+        # Seen live after a typed "[Confirm] (button pressed)" (D-091, D-092).
+        "Your booking has been requested. Our team will confirm it within 2 business hours.",
+        "Your booking request has been placed.",
+        "The visit is now requested for Thursday.",
+        "I've requested the booking for you.",
+        "We have placed your booking.",
+    ],
+)
+def test_a_request_claim_before_confirm_fails(allowed: Allowed, reply: str) -> None:
+    assert C.NO_FALSE_CONFIRMATION in failed(reply, allowed)
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        "You've requested a drain cleaning on Thursday; here are the times.",
+        "You requested a morning visit.",
+        "Once you press Confirm, the booking will be requested.",
+        "Your booking is not requested yet: press Confirm on the card.",
+    ],
+)
+def test_describing_what_the_customer_asked_for_passes(allowed: Allowed, reply: str) -> None:
+    allowed.open_card = True
+    assert C.NO_FALSE_CONFIRMATION not in failed(reply, allowed)
+
+
+def test_a_request_claim_after_confirm_passes(allowed: Allowed) -> None:
+    allowed.done.add("held")
+    assert C.NO_FALSE_CONFIRMATION not in failed("Your booking has been requested.", allowed)
+    text = feedback(check_reply("Your booking has been requested.", Allowed()))
+    assert "Nothing is requested yet" in text
+
+
 def test_a_true_confirmation_passes(allowed: Allowed) -> None:
     allowed.done.add("cancelled")
     assert C.NO_FALSE_CONFIRMATION not in failed("Your booking has been cancelled.", allowed)

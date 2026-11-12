@@ -128,7 +128,17 @@ _CLAIMS = {
     "cancelled": _claim(r"cancell?ed"),
     "moved": _claim(r"moved|rescheduled"),
     "pressed": re.compile(r"\b(?:has|have|you've|you have)(?:\s+[\w'-]+){0,2}?\s+pressed\b", re.I),
+    # "Your booking has been requested" after a typed "[Confirm]" (D-091, D-092). The subject
+    # must be the booking or the assistant, so "You've requested a morning visit" is no claim.
+    "requested": re.compile(
+        r"\b(?:booking|visit|appointment|request|reservation|it)\b(?:\s+[\w'-]+){0,2}?\s+"
+        r"(?:is|was|has been|have been)\s+(?:now\s+)?(?:requested|placed)\b"
+        r"|\b(?:I've|I have|we've|we have)\s+(?:[\w'-]+\s+){0,2}?(?:requested|placed)\b",
+        re.IGNORECASE,
+    ),
 }
+# A request is true once a card was confirmed and went to the team or was held.
+_REQUESTED_TRUE = {"held", "sent"}
 # Words right after "moved" or "rescheduled" that count earlier moves, as when the model says
 # why a third move needs the team ("it has already been moved twice"). They are not a claim
 # that a move happened in this conversation (S-112; D-086).
@@ -156,6 +166,8 @@ def no_false_confirmation(reply: str, allowed: Allowed) -> CheckResult:
         for kind, pattern in _CLAIMS.items():
             for match in pattern.finditer(sentence):
                 if kind in allowed.done or _HEDGE.search(sentence[: match.end()]):
+                    continue
+                if kind == "requested" and allowed.done & _REQUESTED_TRUE:
                     continue
                 if kind == "moved" and _COUNT.match(sentence, match.end()):
                     continue
@@ -360,6 +372,8 @@ CLAIM_HINTS = {
     "cancelled": "Nothing is cancelled yet.",
     "moved": "Nothing is moved yet.",
     "pressed": "The customer has not pressed Confirm. Typed words do not confirm.",
+    "requested": "Nothing is requested yet: a request goes to the team only after the customer "
+    "presses Confirm on the card. Typed words do not confirm.",
 }
 
 
