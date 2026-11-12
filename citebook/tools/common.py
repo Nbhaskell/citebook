@@ -13,7 +13,7 @@ from typing import Any
 from citebook.actions import propose
 from citebook.models import ActionType, PricingKind
 from citebook.money import format_money
-from citebook.timeutil import BusinessClock, format_arrival, parse_utc
+from citebook.timeutil import BusinessClock, find_date_phrases, format_arrival, parse_utc
 from citebook.tools.base import Block, ToolContext, ToolOutput, blocked, invalid
 
 SEED_DIR = Path(__file__).resolve().parent.parent.parent / "db" / "seed"
@@ -240,6 +240,40 @@ def check_booking_open(ctx: ToolContext, _args: Any) -> Block | None:
             "booking_not_active",
         )
     return None
+
+
+def day_not_asked(ctx: ToolContext, slot_row: sqlite3.Row) -> Block | None:
+    """A card's arrival window must fall on a day the customer named, if they named any (D-083).
+
+    The days come from the same reading of the customer's date words as the STATE block, over
+    every customer message in the conversation, so a day the customer later chose from the
+    offered windows also counts. With no date words (or no customer message: tools driven
+    directly) there is nothing to compare with."""
+    texts = [
+        row["content"]
+        for row in ctx.conn.execute(
+            "SELECT content FROM messages WHERE conversation_id = ? AND role = 'customer'"
+            " ORDER BY seq",
+            (ctx.conversation_id,),
+        )
+    ]
+    now = ctx.rules.clock.local(ctx.now)
+    named = [
+        found
+        for index, text in enumerate(texts)
+        for found in find_date_phrases(text, now, texts[:index])
+    ]
+    if not named:
+        return None
+    day = ctx.rules.clock.local(parse_utc(slot_row["starts_at"])).date()
+    if any(found.first <= day <= found.last for found in named):
+        return None
+    return blocked(
+        f"That arrival window is on {day:%A} {day.day} {day:%B}, not a day the customer asked "
+        "for. Offer windows on the days they named; if none is open, say so and ask which "
+        "other day suits them.",
+        "day_not_asked",
+    )
 
 
 def quote_problem(

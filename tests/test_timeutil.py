@@ -218,6 +218,48 @@ def test_a_passed_weekday_this_week_keeps_its_plain_meaning() -> None:
     ]
 
 
+MONDAY = at("2026-11-09T08:00")
+
+
+@pytest.mark.parametrize(
+    ("text", "now", "expected"),
+    [
+        # S-017: "Friday 27 November" was read as the coming Friday (13 November).
+        ("Friday 27 November in the afternoon would be best.", MONDAY, "2026-11-27"),
+        ("Friday 20 November, afternoon please.", MONDAY, "2026-11-20"),
+        ("Mon 16 Nov, arrival 8:00-10:00 AM", MONDAY, "2026-11-16"),  # a time chip
+        ("November 27th works", MONDAY, "2026-11-27"),
+        ("the 27th of November", MONDAY, "2026-11-27"),
+        ("Thu, Nov 19 please", MONDAY, "2026-11-19"),
+        ("20 November 2026", MONDAY, "2026-11-20"),
+        ("January 4", at("2026-12-31T09:00"), "2027-01-04"),  # a passed day is next year's
+    ],
+)
+def test_an_explicit_date_is_read_as_that_date(text: str, now: datetime, expected: str) -> None:
+    found = find_date_phrases(text, now)
+    assert [(f.first.isoformat(), f.last.isoformat()) for f in found] == [(expected, expected)]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Friday 28 November",  # 28 November 2026 is a Saturday: the customer must say which
+        "31 November",
+        "I may 2 or 3 things to fix",
+    ],
+)
+def test_an_impossible_or_mistaken_date_gives_nothing(text: str) -> None:
+    assert find_date_phrases(text, MONDAY) == []
+
+
+def test_an_explicit_weekday_date_ignores_a_named_week() -> None:
+    found = find_date_phrases("Next week? Or Friday 27 November.", MONDAY)
+    assert [(f.phrase, f.first.isoformat()) for f in found] == [
+        ("Next week", "2026-11-16"),
+        ("Friday 27 November", "2026-11-27"),
+    ]
+
+
 def test_find_date_phrases_ignores_words_inside_words() -> None:
     assert find_date_phrases("My name is Monday-Smith and I like todays news", THURSDAY) == []
 

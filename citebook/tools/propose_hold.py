@@ -17,6 +17,7 @@ from citebook.tools.common import (
     SAY_UNKNOWN_QUOTE,
     SAY_UNKNOWN_SLOT,
     arrival,
+    day_not_asked,
     make_card,
     money,
     quote,
@@ -65,7 +66,7 @@ def check_policy(ctx: ToolContext, args: Args) -> Block | None:
     assert first is not None
     if visit_slots(ctx.conn, first, row, ctx.now) is None:
         return blocked(SAY_SLOT_GONE, "slot_not_open")
-    return None
+    return day_not_asked(ctx, first)
 
 
 def handle(ctx: ToolContext, args: Args) -> ToolOutput:

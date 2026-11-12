@@ -165,8 +165,30 @@ _FIXED = [
     "weekend",
 ]
 _DAYS = "|".join(WEEKDAYS)
+# An explicit date: "Friday 27 November", "Mon 16 Nov" (a time chip), "November 27th",
+# "the 27th of November", "Thu, Nov 19", with an optional year. "May" counts only with a
+# capital, so "I may 2 or 3 things" is not a date.
+_MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+_DAY_NAME = (
+    r"(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday"
+    r"|mon|tues?|wed|thu(?:rs?)?|fri|sat|sun)"
+)
+_MONTH = (
+    r"(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|(?-i:May)|june?|july?|aug(?:ust)?"
+    r"|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)(?:\.(?=\s+\d))?"
+)
+_ORDINAL = r"(?:st|nd|rd|th)?"
+_EXPLICIT = (
+    rf"(?:(?P<wd>{_DAY_NAME})\.?,?\s+)?"
+    rf"(?:(?P<d1>\d{{1,2}}){_ORDINAL}(?:\s+of)?\s+(?P<m1>{_MONTH})"
+    rf"|(?P<m2>{_MONTH})\s+(?P<d2>\d{{1,2}}){_ORDINAL})"
+    r"(?:,?\s+(?P<y>\d{4}))?"
+)
+_EXPLICIT_RE = re.compile(_EXPLICIT, re.IGNORECASE)
 _PHRASE = re.compile(
     r"(?<![\w-])("
+    + re.sub(r"\?P<\w+>", "?:", _EXPLICIT)  # the same pattern without its group names
+    + "|"
     + "|".join(re.escape(p) for p in _FIXED)
     + rf"|(?:next |this )?(?:{_DAYS})"
     + r"|\d{4}-\d\d-\d\d"
@@ -175,8 +197,33 @@ _PHRASE = re.compile(
 )
 
 
+def _explicit_date(match: re.Match[str], today: date) -> date | None:
+    """The date an explicit phrase names; without a year, the next such date from today.
+
+    None for a date that does not exist, or when the day name does not match the date (the
+    customer must then say which day they mean)."""
+    month = _MONTHS.index((match["m1"] or match["m2"])[:3].lower()) + 1
+    number = int(match["d1"] or match["d2"])
+    try:
+        if match["y"]:
+            day = date(int(match["y"]), month, number)
+        else:
+            day = date(today.year, month, number)
+            if day < today:
+                day = date(today.year + 1, month, number)
+    except ValueError:
+        return None
+    if match["wd"] and WEEKDAYS[day.weekday()][:3] != match["wd"][:3].lower():
+        return None
+    return day
+
+
 def resolve_phrase(phrase: str, now: datetime) -> DateRange | None:
     """One date phrase, in the business-local `now`, to a date range; None if unclear."""
+    explicit = _EXPLICIT_RE.fullmatch(" ".join(phrase.split()))
+    if explicit:
+        day = _explicit_date(explicit, now.date())
+        return DateRange(phrase, day, day) if day else None
     key = " ".join(phrase.lower().split())
     if re.fullmatch(r"\d{4}-\d\d-\d\d", key):
         try:

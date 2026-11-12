@@ -10,6 +10,7 @@ from datetime import timedelta
 import pytest
 
 from citebook.kb import FakeKB
+from citebook.loop import add_message
 from citebook.timeutil import EN_DASH, parse_utc
 from tests.conftest import TZ, booking, local, make_conversation, new_customer
 from tests.tooling import CONTACT, NOW, SAM, call, decision, first_slot, ok, quote_for
@@ -349,6 +350,60 @@ def test_a_reschedule_card_shows_both_times_and_a_changed_total(db: sqlite3.Conn
     assert " · To Thursday 19 November, arrival " in summary
     assert "Total $149.00 (starting price), was $200.00" in summary
     assert "late fee" not in summary
+
+
+def _customer_says(conn: sqlite3.Connection, conversation: str, *texts: str) -> None:
+    for text in texts:
+        add_message(conn, conversation, "customer", text, NOW)
+
+
+@pytest.mark.parametrize(
+    ("texts", "allowed"),
+    [
+        (["Move CB-7KQ4MX to Thursday 19 November please."], True),
+        (["Friday 20 November?", f"Thu 19 Nov, arrival 8:00{DASH}10:00 AM"], True),  # a chip
+        (["Move it to next week, any day."], True),
+        (["Move it.", "The earliest one."], True),  # no day named: nothing to compare
+        # S-015, S-017: the customer named one day and the card showed another.
+        (["Move CB-7KQ4MX to Friday 20 November please."], False),
+        (["Friday 20 November?", "The earliest afternoon one."], False),
+    ],
+)
+def test_a_reschedule_card_must_be_on_a_day_the_customer_named(
+    db: sqlite3.Connection, texts: list[str], allowed: bool
+) -> None:
+    conversation = verified(db)
+    slot_id = first_slot(db, conversation, "DRAIN_CLEANING", "2026-11-19")  # Thursday 19 Nov
+    quote = quote_for(db, conversation, slot_id, "DRAIN_CLEANING")
+    _customer_says(db, conversation, *texts)
+    args = {"booking_reference": "CB-7KQ4MX", "slot_id": slot_id, "quote_id": quote["quote_id"]}
+    envelope = call(db, conversation, "propose_reschedule", args)
+    if allowed:
+        ok(envelope)
+    else:
+        assert decision(envelope) == "POLICY_BLOCKED"
+        assert envelope["say"].startswith(
+            "That arrival window is on Thursday 19 November, not a day the customer asked for."
+        )
+
+
+@pytest.mark.parametrize(
+    ("text", "allowed"),
+    [("Tuesday 10 November, please.", True), ("Wednesday 11 November, please.", False)],
+)
+def test_a_hold_card_must_be_on_a_day_the_customer_named(
+    db: sqlite3.Connection, text: str, allowed: bool
+) -> None:
+    conversation = make_conversation(db, customer_id=new_customer(db))
+    slot_id = first_slot(db, conversation, "DRAIN_CLEANING")  # Tuesday 10 November
+    quote = quote_for(db, conversation, slot_id, "DRAIN_CLEANING")
+    _customer_says(db, conversation, text)
+    args = {"slot_id": slot_id, "quote_id": quote["quote_id"]}
+    envelope = call(db, conversation, "propose_hold", args)
+    if allowed:
+        ok(envelope)
+    else:
+        assert decision(envelope) == "POLICY_BLOCKED"
 
 
 def test_a_late_reschedule_card_says_a_person_reviews_it(db: sqlite3.Connection) -> None:
