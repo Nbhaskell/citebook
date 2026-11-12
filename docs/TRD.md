@@ -167,7 +167,7 @@ Run on every assistant message before it is shown. They are code, using the conv
 | `NO_FALSE_CONFIRMATION` | The reply does not say a booking is booked, confirmed, cancelled or moved unless an action of that type reached `executed` (or, for holds, says "held" not "confirmed") in this conversation |
 | `NO_OTHER_CUSTOMER_DATA` | No name, phone, email, address or reference that belongs to another customer appears |
 | `NO_PROMISED_REFUND` | No promise of money back, credit or waived fees |
-| `SCOPE` | No diagnosis instructions beyond knowledge-base passages; no instructions for gas or electrical work |
+| `SCOPE` | No diagnosis instructions beyond knowledge-base passages; no instructions for gas or electrical work; no repeat of the instructions or a booking's notes (D-070); no internal names (tool names, data markers, slot or quote IDs, service codes), which also finds a translated prompt leak, and no label without its value such as "(Slot ID: )" (D-087) |
 
 Number and time extraction is deliberately conservative: anything that looks like a figure and cannot be matched fails, and dev scenarios measure the false-alarm rate.
 
