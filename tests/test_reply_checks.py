@@ -208,6 +208,33 @@ def test_held_and_conditional_wording_passes(allowed: Allowed, reply: str) -> No
     assert C.NO_FALSE_CONFIRMATION not in failed(reply, allowed)
 
 
+@pytest.mark.parametrize(
+    "reply",
+    [
+        # S-112: words that count earlier moves are not a claim of a new one (D-086).
+        "Your booking has already been moved twice, which is the most allowed in the chat.",
+        "This booking has already been moved the maximum number of times.",
+        "CB-9PWD2E has been rescheduled 2 times already, so I can't move it again.",
+        "It has been moved two times before, so the team must approve another move.",
+        "Your booking was rescheduled the most times allowed.",
+    ],
+)
+def test_counting_earlier_moves_passes(allowed: Allowed, reply: str) -> None:
+    assert C.NO_FALSE_CONFIRMATION not in failed(reply, allowed)
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        "Your booking has been moved to Tuesday 24 November.",
+        "Done: it's moved, and that is the second time.",
+        "Your visit has been rescheduled. Times are shown on the card.",
+    ],
+)
+def test_a_move_claim_next_to_a_count_still_fails(allowed: Allowed, reply: str) -> None:
+    assert C.NO_FALSE_CONFIRMATION in failed(reply, allowed)
+
+
 def test_a_true_confirmation_passes(allowed: Allowed) -> None:
     allowed.done.add("cancelled")
     assert C.NO_FALSE_CONFIRMATION not in failed("Your booking has been cancelled.", allowed)

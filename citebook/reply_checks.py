@@ -129,6 +129,14 @@ _CLAIMS = {
     "moved": _claim(r"moved|rescheduled"),
     "pressed": re.compile(r"\b(?:has|have|you've|you have)(?:\s+[\w'-]+){0,2}?\s+pressed\b", re.I),
 }
+# Words right after "moved" or "rescheduled" that count earlier moves, as when the model says
+# why a third move needs the team ("it has already been moved twice"). They are not a claim
+# that a move happened in this conversation (S-112; D-086).
+_COUNT = re.compile(
+    r"\s+(?:already\s+)?(?:twice|(?:\d+|two|three|four|several|many)\s+times"
+    r"|the\s+(?:most|maximum|max)\b)",
+    re.IGNORECASE,
+)
 _CARD = re.compile(
     r"\b(?:press|tap|click)\w*\b[^.!?]*\bconfirm\b|\bthe card\b|\bcard (?:below|above)\b",
     re.IGNORECASE,
@@ -148,6 +156,8 @@ def no_false_confirmation(reply: str, allowed: Allowed) -> CheckResult:
         for kind, pattern in _CLAIMS.items():
             for match in pattern.finditer(sentence):
                 if kind in allowed.done or _HEDGE.search(sentence[: match.end()]):
+                    continue
+                if kind == "moved" and _COUNT.match(sentence, match.end()):
                     continue
                 claims.append(kind)
     return CheckResult(

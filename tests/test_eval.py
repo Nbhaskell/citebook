@@ -195,3 +195,37 @@ def test_a_code_written_reply_does_not_count_the_blocked_drafts_checks() -> None
         },
     }
     assert eval_score.violations(BOOK, record) == {}
+
+
+def test_a_reply_that_only_points_at_a_missing_card_is_not_a_false_confirmation() -> None:
+    # S-140: "No, your booking is not cancelled yet. Press Confirm on the card" after the
+    # customer pressed Cancel. The check is right to fail it (there is no card), but no change
+    # was claimed, so it is not a false confirmation (D-086).
+    def record(claims: list[str]) -> dict[str, object]:
+        return {
+            "repeat": 1,
+            "steps": [],
+            "before": {"bookings": [], "customers": []},
+            "after": {
+                "bookings": [],
+                "actions": [],
+                "tools": [],
+                "shown": [
+                    {
+                        "text": "No, your booking is not cancelled yet. Press Confirm on the card.",
+                        "failed": ["NO_FALSE_CONFIRMATION"],
+                        "regenerated": False,
+                        "failed_details": [
+                            {
+                                "attempt": 1,
+                                "code": "NO_FALSE_CONFIRMATION",
+                                "detail": {"claims": claims, "true_in_this_conversation": []},
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+
+    assert eval_score.violations(BOOK, record(["card"])) == {}
+    assert "false_confirmation" in eval_score.violations(BOOK, record(["card", "cancelled"]))
