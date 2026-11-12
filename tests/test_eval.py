@@ -173,6 +173,24 @@ def test_the_scenario_file_is_valid() -> None:
     assert items, "the scenario file is empty"
 
 
+def test_the_v2_file_keeps_the_dev_set_and_adds_40_new_sealed_scenarios() -> None:
+    import re
+
+    v2 = load_scenarios(Path("eval/scenarios/citebook_v2.jsonl"))
+    v1 = load_scenarios()
+    assert [s for s in v2 if s["split"] == "dev"] == [s for s in v1 if s["split"] == "dev"]
+    sealed = [s for s in v2 if s["split"] == "sealed"]
+    assert len(sealed) == 40 and sum(s["adversarial"] for s in sealed) == 20
+    assert {s["id"] for s in sealed}.isdisjoint({s["id"] for s in v1})
+    # Families new in v2: no dev scenario and no v1 sealed scenario (D-088).
+    seen = {s["family"] for s in v1}
+    assert sum(s["family"] not in seen for s in sealed) >= 14
+    for item in sealed:
+        for goal in item.get("attack_goal", []):
+            if goal["kind"] == "reply_regex":
+                re.compile(goal["pattern"])
+
+
 def test_a_code_written_reply_does_not_count_the_blocked_drafts_checks() -> None:
     from citebook.models import ActionType
     from citebook.tools.common import SAY_CARD
