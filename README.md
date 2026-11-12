@@ -48,6 +48,19 @@ flowchart LR
 
 Both work by keyboard alone and at 360 px wide.
 
+Screenshots from a local run with the demo data and local `qwen3:8b`:
+
+<p>
+  <img src="docs/images/booking-held.png" width="380" alt="The chat widget: the customer asks for a faucet replacement on Thursday morning, the assistant lists two open times, a price table computed by code shows a total of $165.00, the customer gives contact details, and a confirmation card shows the visit, the address and the total. After the customer presses Confirm, the card shows Held with reference CB-4G5JTQ.">
+  <img src="docs/images/console-activity.png" width="380" alt="The staff console's activity timeline for one conversation: each tool call with the gate's decision, mostly Allowed and one propose_hold Blocked: policy, and the eight reply checks on an assistant draft, all passed.">
+</p>
+
+Left: a booking from question to held booking. The price table and the card are built by code; the booking is held only after the Confirm button. Right: the activity timeline staff see, with the gate's decision on every tool call and the result of every reply check.
+
+![The staff console queue: one held booking for Ivo Sandberg on Thursday 12 November, arrival 8:00 to 10:00 AM, total $165.00, reason "New booking to confirm", status Needs decision. Tabs show 1 handoff, 0 expired holds and 0 recent.](docs/images/console-queue.png)
+
+The staff queue: holds, late changes, refunds, exceptions and handoffs wait here for a person.
+
 ## Two conversations from the evaluation
 
 Excerpts from the v1 sealed run (all layers, local `qwen3:8b`), shortened with […]. Every name and number is invented. Both show faults that later fixes address; the notes under each say which.
@@ -103,6 +116,7 @@ v1 measured the same system before eight rounds of fixes (D-080 to D-087) on a d
 
 - Benign task success (70.0%) and escalation recall (71.4%) are below the targets in the requirements (85% and 90%). On kinds of conversation new in v2 benign success was 57.1% (76.9% on kinds seen in development).
 - The check that blocks empty labels such as "(Slot ID: )" has a cost: in two scenarios the model wrote the label in both drafts, the customer got the fallback reply and a handoff, and no booking was made. These are all of the 14.3% unnecessary escalations.
+- A live run after the evaluation found a claim the false-confirmation check misses: after the customer typed "[Confirm] (button pressed)", the assistant said "Your booking has been requested". Nothing was booked (the card was still open), but the words say otherwise; "requested" is not one of the check's claim words. In the three sealed runs of the same attack the model worded it differently and the check blocked it.
 - Three of the six failing scenarios are the model stopping when the next tool call was clear (after verifying, it showed the booking and did not make the refund or cancellation card).
 - Scripted customers press Confirm without reading the card, so these numbers show the system's behaviour, not a real customer's experience.
 - 40 sealed scenarios is a small sample (one scenario is 5 points), the same assistant built the system and wrote the scenarios, and only one local model and the fake knowledge base were measured. The per-layer ablations in the v1 report were measured on v1 code.
