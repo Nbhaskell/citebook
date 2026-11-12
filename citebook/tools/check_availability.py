@@ -14,11 +14,12 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from citebook.models import ToolKind, ToolName
-from citebook.timeutil import format_slot_short, parse_utc, to_utc_text
+from citebook.timeutil import DateRange, format_slot_short, parse_utc, to_utc_text
 from citebook.tools.base import Block, ToolArgs, ToolContext, ToolOutput, ToolSpec, blocked, invalid
 from citebook.tools.common import (
     SAY_OUT_OF_AREA,
     SAY_UNKNOWN_SERVICE,
+    named_days,
     service,
     visit_slots,
     zip_problem,
@@ -94,7 +95,7 @@ def handle(ctx: ToolContext, args: Args) -> ToolOutput:
         " AND s.starts_at > ? ORDER BY s.starts_at, t.name",
         (to_utc_text(start), to_utc_text(end), to_utc_text(ctx.now)),
     ).fetchall()
-    found: list[dict[str, str]] = []
+    windows: list[tuple[date, dict[str, str]]] = []
     seen: set[str] = set()
     for first in candidates:
         if first["starts_at"] in seen:
@@ -109,18 +110,53 @@ def handle(ctx: ToolContext, args: Args) -> ToolOutput:
             continue
         seen.add(first["starts_at"])
         finish = clock.local(parse_utc(first["ends_at"]))
-        found.append({"slot_id": first["id"], "when": format_slot_short(local, finish)})
-        if len(found) == MAX_RESULTS:
-            break
+        window = {"slot_id": first["id"], "when": format_slot_short(local, finish)}
+        windows.append((local.date(), window))
+    # Days the customer named inside the range come first: with only the earliest windows, a
+    # range that starts before the customer's day could hide that day entirely (D-084).
+    named = named_days(ctx)
+    wanted = [f for f in named if f.first <= args.date_to and f.last >= args.date_from]
+    on_wanted = [w for day, w in windows if any(f.first <= day <= f.last for f in wanted)]
+    note = None
+    if wanted and on_wanted:
+        chosen = on_wanted[:MAX_RESULTS]
+        note = "Only windows on the days the customer named are listed."
+    else:
+        chosen = [w for _, w in windows][:MAX_RESULTS]
+        if wanted and chosen:
+            days = ", ".join(_days_text(found) for found in wanted)
+            note = (
+                f"No open windows on the days the customer named ({days}). These are the "
+                "earliest other windows in the range."
+            )
+    if not chosen:
+        note = "No open arrival windows in that range. Offer to look at other dates."
+    # The model was seen to search a range without the customer's day, and then tell the
+    # customer that day had no windows (S-015). The latest named day still ahead is named here.
+    ahead = [f for f in named if f.last >= ctx.rules.clock.local(ctx.now).date()]
+    if not wanted and ahead:
+        note = (
+            f"The customer asked for {_days_text(ahead[-1])}, which is outside this range. "
+            "Call check_availability for that day before you say anything about it."
+        )
     data: dict[str, object] = {
         "service_code": row["code"],
         "date_from": args.date_from.isoformat(),
         "date_to": args.date_to.isoformat(),
-        "slots": found,
+        "slots": chosen,
     }
-    if not found:
-        data["note"] = "No open arrival windows in that range. Offer to look at other dates."
+    if note:
+        data["note"] = note
     return ToolOutput(data=data)
+
+
+def _days_text(found: DateRange) -> str:
+    def one(day: date) -> str:
+        return f"{day:%A} {day.day} {day:%B}"
+
+    if found.first == found.last:
+        return one(found.first)
+    return f"{one(found.first)} to {one(found.last)}"
 
 
 SPEC = ToolSpec(

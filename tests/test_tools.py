@@ -65,6 +65,72 @@ def test_availability_returns_at_most_six_future_windows_once_each(db: sqlite3.C
     )
 
 
+def test_availability_lists_the_days_the_customer_named(db: sqlite3.Connection) -> None:
+    # S-013: the range started on Monday, so 6 earlier windows hid Friday 13 November.
+    conversation = make_conversation(db)
+    add_message(db, conversation, "customer", "Friday 13 November, ZIP 00012.", NOW)
+    data = availability(
+        db,
+        conversation,
+        service_code="DRAIN_CLEANING",
+        date_from="2026-11-09",
+        date_to="2026-11-14",
+    )
+    whens = [s["when"] for s in data["slots"]]  # type: ignore[attr-defined]
+    assert len(whens) == 3 and all(w.startswith("Fri 13 Nov") for w in whens)
+    assert data["note"] == "Only windows on the days the customer named are listed."
+
+
+def test_availability_says_when_a_named_day_has_no_windows(db: sqlite3.Connection) -> None:
+    conversation = make_conversation(db)
+    add_message(db, conversation, "customer", "Sunday 15 November? ZIP 00012.", NOW)
+    data = availability(
+        db,
+        conversation,
+        service_code="DRAIN_CLEANING",
+        date_from="2026-11-09",
+        date_to="2026-11-15",
+    )
+    whens = [s["when"] for s in data["slots"]]  # type: ignore[attr-defined]
+    assert len(whens) == 6 and whens[0].startswith("Mon 9 Nov")
+    assert data["note"] == (
+        "No open windows on the days the customer named (Sunday 15 November). These are the "
+        "earliest other windows in the range."
+    )
+
+
+def test_availability_says_when_the_named_day_is_outside_the_range(db: sqlite3.Connection) -> None:
+    # S-015: the model searched without the customer's day and said that day had no windows.
+    conversation = make_conversation(db)
+    add_message(db, conversation, "customer", "Friday 20 November? ZIP 00012.", NOW)
+    data = availability(
+        db,
+        conversation,
+        service_code="DRAIN_CLEANING",
+        date_from="2026-11-09",
+        date_to="2026-11-12",
+    )
+    assert len(data["slots"]) == 6  # type: ignore[arg-type]
+    assert data["note"] == (
+        "The customer asked for Friday 20 November, which is outside this range. "
+        "Call check_availability for that day before you say anything about it."
+    )
+
+
+def test_availability_without_named_days_is_the_earliest_windows(db: sqlite3.Connection) -> None:
+    conversation = make_conversation(db)
+    add_message(db, conversation, "customer", "Whenever is soonest, ZIP 00012.", NOW)
+    data = availability(
+        db,
+        conversation,
+        service_code="DRAIN_CLEANING",
+        date_from="2026-11-09",
+        date_to="2026-11-14",
+    )
+    whens = [s["when"] for s in data["slots"]]  # type: ignore[attr-defined]
+    assert len(whens) == 6 and whens[0].startswith("Mon 9 Nov") and "note" not in data
+
+
 def test_afternoon_means_windows_starting_at_noon_or_later(db: sqlite3.Connection) -> None:
     data = availability(db, make_conversation(db), part_of_day="afternoon")
     for s in data["slots"]:  # type: ignore[attr-defined]
