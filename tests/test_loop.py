@@ -713,3 +713,41 @@ def test_contact_details_must_come_from_the_customer(
     else:
         assert result["gate_decision"] == "INVALID_ARGUMENTS"
         assert result["say"].startswith("Ask the customer for their name, phone number")
+
+
+@pytest.mark.parametrize(
+    ("messages", "allowed"),
+    [
+        (["Please cancel my booking CB-7KQ4MX."], True),
+        (["I want to cancel.", "Ref CB-7KQ4MX, last four 0142."], True),
+        (["We have to call it off, CB-7KQ4MX."], True),
+        (["I no longer need the visit, CB-7KQ4MX."], True),
+        (["Can I move CB-7KQ4MX to Friday 20 November in the morning?"], False),
+        (["Move it please.", "OK, please send it to your team then."], False),
+    ],
+)
+def test_a_cancellation_card_needs_the_customer_to_ask_for_one(
+    db: sqlite3.Connection, messages: list[str], allowed: bool
+) -> None:
+    # S-106, S-111: the customer asked to move and the model offered a cancellation card.
+    conversation = make_conversation(
+        db, verified_booking_id=booking(db, "CB-7KQ4MX")["id"], now=NOW
+    )
+    for text in messages[:-1]:
+        run(db, conversation, text, [say("Go on.")])
+    result, fake = run(
+        db,
+        conversation,
+        messages[-1],
+        [
+            use("request_cancellation", booking_reference="CB-7KQ4MX"),
+            say("Please check the card and press Confirm." if allowed else "Which new time?"),
+        ],
+    )
+    envelope = json.loads(fake.calls[1][0][-1]["content"].split("\n")[1])
+    if allowed:
+        assert envelope["ok"] and result.card is not None
+    else:
+        assert envelope["gate_decision"] == "POLICY_BLOCKED"
+        assert envelope["say"].startswith("The customer has not asked to cancel")
+        assert result.card is None
