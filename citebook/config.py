@@ -73,6 +73,13 @@ class Settings(BaseSettings):
                 "CITEBOOK_MODEL_PROVIDER=hosted requires CITEBOOK_ALLOW_HOSTED=true. "
                 "Hosted models send conversation text to a third party and are off by default."
             )
+        if self.model_provider == "hosted":
+            # The opt-in exists, the provider does not: refuse rather than run the local
+            # model under a setting that says otherwise (D-093).
+            raise ValueError(
+                "CITEBOOK_MODEL_PROVIDER=hosted: this version has no hosted model provider. "
+                "Use ollama (the default)."
+            )
         if self.ablation != Ablation.NONE and not self.eval_mode:
             raise ValueError(
                 "CITEBOOK_ABLATION switches off safety layers and is allowed only in the "

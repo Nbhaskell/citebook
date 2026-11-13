@@ -64,8 +64,10 @@ def test_hosted_provider_needs_explicit_opt_in(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setenv("CITEBOOK_MODEL_PROVIDER", "hosted")
     with pytest.raises(ValidationError, match="CITEBOOK_ALLOW_HOSTED"):
         make()
+    # With the opt-in, the API still refuses: this version has no hosted provider (D-093).
     monkeypatch.setenv("CITEBOOK_ALLOW_HOSTED", "true")
-    assert make().model_provider == "hosted"
+    with pytest.raises(ValidationError, match="no hosted model provider"):
+        make()
 
 
 @pytest.mark.parametrize("value", ["baseline", "no_gate_policy", "no_reply_checks"])
