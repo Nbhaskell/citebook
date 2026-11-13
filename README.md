@@ -48,6 +48,10 @@ flowchart LR
 
 Both work by keyboard alone and at 360 px wide.
 
+A 67-second recording of a local run with the demo data and local `qwen3:8b`: a booking that is held only after Confirm, a typed "confirmation" that changes nothing, and the approval in the staff console. The waits for the model are cut and two scenes play at 1.3 times normal speed. The business and its customers are invented. The steps are in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md).
+
+https://github.com/user-attachments/assets/da14258f-8d0e-498e-9764-5a29aa5762e4
+
 Screenshots from a local run with the demo data and local `qwen3:8b`:
 
 <p>
