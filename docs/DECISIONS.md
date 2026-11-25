@@ -497,3 +497,22 @@ Dependabot alert 1 (`minimatch` 10.2.6 in `web/package-lock.json`, advisory GHSA
 The two jobs are now separate in the result. Personal-information findings block the commit, as before. Wording findings are printed under "Doc wording warnings" with the file and line, and the commit continues; CI prints the same warnings and passes. A pattern cannot tell the voice of the docs from a quoted customer or model message, so a wrong match now costs a line of output and not a rewrite of correct text. The one-voice rule for docs is unchanged; only its enforcement changed from a gate to a warning.
 
 The first-person pattern also no longer matches present-tense verbs that end in "ed" ("I need", "I feed", "I proceed"); their past-tense forms still match.
+
+### D-098. The staff console uses the shared Cite design system v1.1.1
+The staff console uses the shared Cite design system ("The Calm Control Room", v1.1.1). `DESIGN.md` at the repository root and `web/src/console/cite-tokens.css` are unchanged copies from Citebrief; a value is changed there first and then copied again. The console imports `cite-tokens.css` before `console.css` and no longer imports `web/src/shared/tokens.css`, so D-065 now applies to the widget and the demo page only. `console.css` uses only `--cite-*` tokens; `web/src/console/design.test.ts` fails on a typed hex, `rgb()` or `hsl()` color in it, on an unknown token, and on a color pair under 4.5:1 for text or 3:1 for control edges (Input Border on Surface and on Canvas, the focus outline) in the light and the dark theme. The tokens switch to dark when the system asks for dark, unless the root has `data-theme="light"`. The console has no theme switch, and none is added. Behavior, copy, links and flows are unchanged.
+
+Citebook rules that win over `DESIGN.md`:
+- **Touch size.** Buttons, inputs, top-bar links and queue tabs are at least 44px high on touch screens (UI brief section 7). `DESIGN.md` uses 36px controls and keeps the tap area with space around them; on a mouse screen the console uses the 36px and 32px tokens.
+- **Conversation layout.** The conversation detail keeps three columns on wide screens, with the decision panel first in the page order and on the right (UI brief section 4), and the existing 1100px and 700px breakpoints. `DESIGN.md` gives a 2fr/1fr grid at 60rem.
+- **Demo sentence.** The full sentence "Demo data. This business, its staff and customers are invented." stays (rule 10 and the entry-point test); it is not shortened to a "Demo data" pill.
+- **Queue tabs.** The queue groups stay `role="tab"` links with their counts (UI brief section 4). They use the `DESIGN.md` tab style; the counts are not changed into toggle buttons or tiles.
+- **Ablation banner.** The evaluation banner stays red (UI brief section 4) and uses the Danger tint, line and text.
+
+Differences that are not a text, link, flow or size rule, waiting for confirmation:
+- The demo sentence is a full-width Warning strip above the top bar, not a footer sentence, so it stays visible at the top.
+- The ablation banner is a full-width strip under the demo sentence; `DESIGN.md` has no pattern for it.
+- Booking references, tool names and tool JSON use the system monospace font with tabular numerals.
+- The quick-reason buttons are small buttons with round ends but no `aria-pressed`: they fill the reason box and hold no state.
+- An error in a decision form shows under the reason box in Danger Text, also when the API refused the decision. Other load errors use the Warning banner.
+- Team-member messages in the transcript use the Info tint and customer messages Canvas, with the role word above each message.
+- In print, the top bar links, the skip link and the buttons are hidden.

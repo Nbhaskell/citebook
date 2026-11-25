@@ -6,7 +6,7 @@ import { CalendarView } from "./CalendarView";
 import { ConversationView } from "./ConversationView";
 import { OutboxView } from "./OutboxView";
 import { QueueView, TABS } from "./QueueView";
-import "../shared/tokens.css";
+import "./cite-tokens.css";
 import "./console.css";
 
 type Route =
@@ -102,7 +102,9 @@ export function ConsoleApp() {
         {route.view === "status" && (
           <section aria-labelledby="status-title">
             <h1 id="status-title">Status</h1>
-            <StatusPanel />
+            <div className="status-card">
+              <StatusPanel />
+            </div>
             <p className="muted">
               Business rules (prices, hold time, cancellation window) are read-only in v1 and
               live in the database settings.
