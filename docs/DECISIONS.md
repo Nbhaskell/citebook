@@ -508,7 +508,7 @@ Citebook rules that win over `DESIGN.md`:
 - **Queue tabs.** The queue groups stay `role="tab"` links with their counts (UI brief section 4). They use the `DESIGN.md` tab style; the counts are not changed into toggle buttons or tiles.
 - **Ablation banner.** The evaluation banner stays red (UI brief section 4) and uses the Danger tint, line and text.
 
-Differences that are not a text, link, flow or size rule, waiting for confirmation:
+Differences that are not a text, link, flow or size rule, accepted on 2026-11-25:
 - The demo sentence is a full-width Warning strip above the top bar, not a footer sentence, so it stays visible at the top.
 - The ablation banner is a full-width strip under the demo sentence; `DESIGN.md` has no pattern for it.
 - Booking references, tool names and tool JSON use the system monospace font with tabular numerals.
@@ -516,3 +516,5 @@ Differences that are not a text, link, flow or size rule, waiting for confirmati
 - An error in a decision form shows under the reason box in Danger Text, also when the API refused the decision. Other load errors use the Warning banner.
 - Team-member messages in the transcript use the Info tint and customer messages Canvas, with the role word above each message.
 - In print, the top bar links, the skip link and the buttons are hidden.
+
+The customer widget and the demo page are out of scope: they keep their own look under D-065 and `web/src/shared/tokens.css`. A move of the widget to the Cite tokens is a possible later task.

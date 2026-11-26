@@ -1,4 +1,4 @@
-/* Design tokens shared by the widget, the demo page and the staff console (D-065). */
+/* Design tokens of the widget and the demo page (D-065). The staff console uses cite-tokens.css (D-098). */
 :root {
   --paper: #faf7f2;
   --paper-deep: #f1ebe1;
