@@ -5,7 +5,7 @@
   box-sizing: border-box;
 }
 
-html,
+/* Body size on body only, so 1rem stays the browser's root size for the rem tokens. */
 body {
   margin: 0;
   background: var(--cite-canvas);
@@ -864,12 +864,10 @@ body {
 /* --- print: one column, dark text on white, no shadows or tints ------------------------------ */
 
 @media print {
-  :root {
-    color-scheme: light;
-  }
-
-  .console *,
-  .console {
+  /* Light system colors on paper, also when the screen theme is dark. */
+  body,
+  body * {
+    color-scheme: light !important;
     color: CanvasText !important;
     background: Canvas !important;
     box-shadow: none !important;
