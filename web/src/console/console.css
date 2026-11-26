@@ -1,17 +1,160 @@
-/* Staff console (D-065): calm, dense, grey neutrals, tables. Status is word + icon + colour. */
+/* Staff console: the shared Cite design system (DESIGN.md, D-098). Colors come only from
+   cite-tokens.css, which is imported first; a test fails on a typed color in this file. */
+
+* {
+  box-sizing: border-box;
+}
+
+/* Body size on body only, so 1rem stays the browser's root size for the rem tokens. */
+body {
+  margin: 0;
+  background: var(--cite-canvas);
+  color: var(--cite-text);
+  font-family: var(--cite-font);
+  font-size: var(--cite-text-body);
+  line-height: 1.55;
+}
+
+:focus-visible {
+  outline: 3px solid var(--cite-focus);
+  outline-offset: 2px;
+}
 
 .console {
-  --c-bg: #f5f6f7;
-  --c-line: #d5d9dd;
-  --c-head: #eceef0;
-  background: var(--c-bg);
   min-height: 100vh;
-  font-size: 15px;
 }
 
-body:has(.console) {
-  background: #f5f6f7;
+.console a {
+  color: var(--cite-link);
 }
+
+.ref,
+.console code,
+.console pre {
+  font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.ref {
+  font-size: 0.85em;
+}
+
+.muted {
+  color: var(--cite-muted);
+  font-weight: 400;
+}
+
+.icon {
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+
+/* --- buttons ---------------------------------------------------------------------------------- */
+
+.console button {
+  font: inherit;
+  font-size: var(--cite-text-button);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cite-space-1);
+  min-height: var(--cite-control-height);
+  padding: 0 var(--cite-space-4);
+  border-radius: var(--cite-radius-md);
+  border: 1px solid var(--cite-input-border);
+  background: var(--cite-surface);
+  color: var(--cite-text);
+  cursor: pointer;
+}
+
+.console button:hover {
+  background: var(--cite-canvas);
+}
+
+.console button.primary {
+  background: var(--cite-primary);
+  border-color: var(--cite-primary);
+  color: var(--cite-on-primary);
+}
+
+.console button.primary:hover {
+  background: var(--cite-primary-hover);
+  border-color: var(--cite-primary-hover);
+}
+
+.console button.danger {
+  background: var(--cite-danger-solid);
+  border-color: var(--cite-danger-solid);
+  color: var(--cite-on-primary);
+}
+
+.console button.danger:hover {
+  background: var(--cite-danger-solid-hover);
+  border-color: var(--cite-danger-solid-hover);
+}
+
+/* Quick reasons fill the reason box; they hold no state, so they are small round buttons. */
+.console button.chip,
+.draft button {
+  min-height: var(--cite-control-height-small);
+  padding: 0 var(--cite-space-3);
+}
+
+.console button.chip {
+  border-radius: var(--cite-radius-pill);
+}
+
+.console button:disabled,
+.console button:disabled:hover {
+  background: var(--cite-rule);
+  border-color: var(--cite-rule);
+  color: var(--cite-muted);
+  cursor: not-allowed;
+}
+
+/* --- inputs ----------------------------------------------------------------------------------- */
+
+.console input,
+.console textarea,
+.console select {
+  font: inherit;
+  color: var(--cite-text);
+  background: var(--cite-surface);
+  border: 1px solid var(--cite-input-border);
+  border-radius: var(--cite-radius-md);
+  min-height: var(--cite-control-height);
+  padding: var(--cite-space-2) var(--cite-space-3);
+}
+
+.console input:focus,
+.console textarea:focus,
+.console select:focus {
+  border-color: var(--cite-primary);
+}
+
+.console textarea[aria-invalid="true"] {
+  border-color: var(--cite-danger-solid);
+}
+
+.console label {
+  font-size: var(--cite-text-small);
+  font-weight: 600;
+}
+
+/* Citebook UI brief section 7: controls at least 44px on touch screens (D-098). */
+@media (pointer: coarse) {
+  .console button,
+  .console input,
+  .console textarea,
+  .console select,
+  .console nav a,
+  .console .tab {
+    min-height: 44px;
+  }
+}
+
+/* --- page frame ------------------------------------------------------------------------------- */
 
 .skip {
   position: absolute;
@@ -19,20 +162,32 @@ body:has(.console) {
 }
 
 .skip:focus {
-  left: 0.5rem;
-  top: 0.5rem;
+  left: var(--cite-space-2);
+  top: var(--cite-space-2);
   z-index: 10;
-  background: var(--surface);
-  padding: 0.5rem;
+  background: var(--cite-surface);
+  color: var(--cite-link);
+  padding: var(--cite-space-2);
+  border-radius: var(--cite-radius-md);
 }
 
+/* The full demo sentence stays above the top bar, always visible (rule 10, D-098). */
 .demo-label {
   margin: 0;
-  padding: 0.35rem 1rem;
-  background: var(--warn-soft);
-  color: var(--ink);
-  font-size: 0.85rem;
-  border-bottom: 1px solid var(--c-line);
+  padding: var(--cite-space-1) max(var(--cite-space-5), calc((100% - 72rem) / 2 + var(--cite-space-5)));
+  background: var(--cite-warning-bg);
+  color: var(--cite-warning-text);
+  border-bottom: 1px solid var(--cite-warning-line);
+  font-size: var(--cite-text-small);
+}
+
+.banner-eval {
+  margin: 0;
+  padding: var(--cite-space-2) var(--cite-space-5);
+  background: var(--cite-danger-bg);
+  color: var(--cite-danger-text);
+  border-bottom: 1px solid var(--cite-danger-line);
+  font-weight: 600;
 }
 
 .console-header {
@@ -40,43 +195,70 @@ body:has(.console) {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.25rem 1.5rem;
-  padding: 0.25rem 1rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--c-line);
+  gap: 0 var(--cite-space-6);
+  /* The bar is full width; its content lines up with the 72rem page. */
+  padding: 0 max(var(--cite-space-5), calc((100% - 72rem) / 2 + var(--cite-space-5)));
+  background: var(--cite-surface);
+  border-bottom: 1px solid var(--cite-border);
 }
 
 .console-title {
-  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--cite-space-2);
+  margin: var(--cite-space-2) 0;
+}
+
+/* The brand mark: a navy square before the product name. */
+.console-title::before {
+  content: "";
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: var(--cite-radius-md);
+  background: var(--cite-primary);
 }
 
 .console nav ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: var(--cite-space-1);
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.console nav a {
+.console nav a,
+.console .tab {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 0.75rem;
-  color: var(--ink);
+  gap: var(--cite-space-2);
+  min-height: var(--cite-control-height);
+  padding: 0 var(--cite-space-3);
+  color: var(--cite-muted);
   text-decoration: none;
-  border-bottom: 3px solid transparent;
+  border-bottom: 2px solid transparent;
 }
 
-.console nav a[aria-current="page"] {
-  border-bottom-color: var(--primary);
+.console nav a {
+  min-height: 2.75rem;
+}
+
+.console nav a:hover,
+.console .tab:hover {
+  color: var(--cite-text);
+}
+
+.console nav a[aria-current="page"],
+.console .tab[aria-selected="true"] {
+  color: var(--cite-text);
   font-weight: 600;
+  border-bottom-color: var(--cite-primary);
 }
 
 .console main {
-  padding: 1rem;
-  max-width: 90rem;
+  padding: var(--cite-space-5);
+  max-width: 72rem;
   margin: 0 auto;
 }
 
@@ -85,22 +267,25 @@ body:has(.console) {
 }
 
 .console h1 {
-  font-size: 1.35rem;
+  font-size: var(--cite-text-headline);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 
 .console h2 {
-  font-size: 1.05rem;
-  margin: 0 0 0.5rem;
+  font-size: var(--cite-text-title);
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 var(--cite-space-3);
 }
 
 .console h3 {
-  font-size: 0.95rem;
-  margin: 1rem 0 0.4rem;
-}
-
-.console a {
-  color: var(--primary);
+  font-size: var(--cite-text-body);
+  font-weight: 700;
+  line-height: 1.3;
+  margin: var(--cite-space-4) 0 var(--cite-space-2);
 }
 
 .view-head {
@@ -108,36 +293,75 @@ body:has(.console) {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  gap: var(--cite-space-2);
+  margin-bottom: var(--cite-space-4);
 }
 
-.muted {
-  color: var(--ink-soft);
-  font-weight: 400;
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cite-space-2);
+  margin-top: var(--cite-space-2);
+}
+
+/* --- cards, banners, empty and error states --------------------------------------------------- */
+
+.col,
+.status-card,
+.draft,
+.day,
+.empty {
+  background: var(--cite-surface);
+  border: 1px solid var(--cite-border);
+  border-radius: var(--cite-radius-lg);
+  box-shadow: var(--cite-shadow-card);
+  min-width: 0;
+}
+
+.col,
+.status-card {
+  padding: var(--cite-card-padding);
 }
 
 .empty {
-  color: var(--ink-soft);
-  padding: 1rem;
-  background: var(--surface);
-  border: 1px dashed var(--c-line);
-  border-radius: var(--radius-small);
+  color: var(--cite-muted);
+  padding: var(--cite-card-padding);
+  margin: 0;
 }
 
+/* Inside a card the empty state is only a sentence. */
+.col .empty {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* Error state: a warning banner that names what failed. */
 .error {
-  color: var(--bad);
-  background: var(--bad-soft);
-  border: 1px solid var(--bad);
-  border-radius: var(--radius-small);
-  padding: 0.5rem 0.75rem;
+  color: var(--cite-warning-text);
+  background: var(--cite-warning-bg);
+  border: 1px solid var(--cite-warning-line);
+  border-radius: var(--cite-radius-lg);
+  padding: var(--cite-space-2) var(--cite-space-3);
+}
+
+/* A decision error sits under its reason field: danger text, no box. */
+.decision .error {
+  color: var(--cite-danger-text);
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--cite-text-small);
 }
 
 .note {
-  background: var(--warn-soft);
-  border-left: 4px solid var(--warn);
-  padding: 0.4rem 0.6rem;
-  font-size: 0.9rem;
+  background: var(--cite-warning-bg);
+  color: var(--cite-warning-text);
+  border: 1px solid var(--cite-warning-line);
+  border-radius: var(--cite-radius-md);
+  padding: var(--cite-space-2) var(--cite-space-3);
+  font-size: var(--cite-text-small);
 }
 
 .notice:empty {
@@ -145,119 +369,115 @@ body:has(.console) {
 }
 
 .notice {
-  background: var(--ok-soft);
-  border-left: 4px solid var(--ok);
-  padding: 0.4rem 0.6rem;
+  background: var(--cite-success-bg);
+  color: var(--cite-success-text);
+  font-weight: 600;
+  border-radius: var(--cite-radius-md);
+  padding: var(--cite-space-2) var(--cite-space-3);
 }
 
-.ref {
-  font-family: var(--mono);
-  font-size: 0.85em;
-}
+/* --- pills ------------------------------------------------------------------------------------ */
 
-.icon {
-  vertical-align: -0.125em;
-  flex-shrink: 0;
-}
-
-/* status badge */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.05rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.82rem;
+  gap: var(--cite-space-1);
+  padding: 1px 9px;
+  border-radius: var(--cite-radius-pill);
+  font-size: var(--cite-text-small);
   font-weight: 600;
+  line-height: 1.45;
   white-space: nowrap;
-  border: 1px solid currentColor;
+}
+
+.badge .icon {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .badge-ok {
-  color: var(--ok);
-  background: var(--ok-soft);
+  color: var(--cite-success-text);
+  background: var(--cite-success-bg);
 }
 
 .badge-warn {
-  color: var(--warn);
-  background: var(--warn-soft);
+  color: var(--cite-warning-text);
+  background: var(--cite-warning-bg);
 }
 
 .badge-bad {
-  color: var(--bad);
-  background: var(--bad-soft);
+  color: var(--cite-danger-text);
+  background: var(--cite-danger-bg);
 }
 
 .badge-neutral {
-  color: var(--ink-soft);
-  background: var(--c-head);
+  color: var(--cite-neutral-text);
+  background: var(--cite-neutral-bg);
 }
 
-/* tabs */
+/* --- tabs ------------------------------------------------------------------------------------- */
+
 .tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
-  border-bottom: 1px solid var(--c-line);
-  margin-bottom: 0.75rem;
+  gap: var(--cite-space-1);
+  border-bottom: 1px solid var(--cite-border);
+  margin-bottom: var(--cite-space-4);
 }
 
 .tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 44px;
-  padding: 0 0.85rem;
-  color: var(--ink);
-  text-decoration: none;
-  border: 1px solid transparent;
-  border-bottom: none;
-  border-radius: var(--radius-small) var(--radius-small) 0 0;
-}
-
-.console .tab {
-  color: var(--ink);
-}
-
-.tab[aria-selected="true"] {
-  background: var(--surface);
-  border-color: var(--c-line);
-  font-weight: 600;
   margin-bottom: -1px;
 }
 
 .tab-count {
   min-width: 1.5rem;
   text-align: center;
-  padding: 0 0.35rem;
-  border-radius: 999px;
-  background: var(--c-head);
-  font-size: 0.8rem;
+  padding: 0 var(--cite-space-2);
+  border-radius: var(--cite-radius-pill);
+  background: var(--cite-neutral-bg);
+  color: var(--cite-neutral-text);
+  font-size: var(--cite-text-small);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-/* tables */
+/* --- tables ----------------------------------------------------------------------------------- */
+
 .table {
   width: 100%;
-  border-collapse: collapse;
-  background: var(--surface);
-  border: 1px solid var(--c-line);
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--cite-surface);
+  border: 1px solid var(--cite-border);
+  border-radius: var(--cite-radius-lg);
+  box-shadow: var(--cite-shadow-card);
   font-variant-numeric: tabular-nums;
 }
 
 .table th,
 .table td {
   text-align: left;
-  padding: 0.45rem 0.6rem;
-  border-bottom: 1px solid var(--c-line);
+  padding: var(--cite-row-padding-y) var(--cite-space-3);
+  border-top: 1px solid var(--cite-rule);
   vertical-align: top;
 }
 
 .table thead th {
-  background: var(--c-head);
-  font-size: 0.82rem;
+  border-top: none;
+  border-bottom: 1px solid var(--cite-border);
+  font-size: var(--cite-text-label);
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--ink-soft);
+  letter-spacing: 0.06em;
+  color: var(--cite-muted);
+}
+
+.table tbody tr:first-child td {
+  border-top: none;
+}
+
+.table td:first-child {
+  font-weight: 600;
 }
 
 .table .num {
@@ -270,12 +490,12 @@ body:has(.console) {
   min-height: 24px;
 }
 
-/* conversation detail */
+/* --- conversation detail ---------------------------------------------------------------------- */
 /* The decision panel is first in the page order (keyboard path) and on the right on wide screens. */
 .detail {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
-  gap: 1rem;
+  gap: var(--cite-space-4);
   align-items: start;
 }
 
@@ -284,47 +504,45 @@ body:has(.console) {
   grid-row: 1;
 }
 
-.col {
-  background: var(--surface);
-  border: 1px solid var(--c-line);
-  border-radius: var(--radius-small);
-  padding: 0.75rem;
-  min-width: 0;
-}
-
 .transcript {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--cite-space-2);
 }
 
 .t-msg {
-  padding: 0.4rem 0.6rem;
-  border-radius: var(--radius-small);
-  border: 1px solid var(--c-line);
+  padding: var(--cite-space-2) var(--cite-space-3);
+  border-radius: var(--cite-radius-md);
+  border: 1px solid var(--cite-border);
 }
 
 .t-customer {
-  background: var(--paper-deep);
-  margin-left: 1.5rem;
+  background: var(--cite-canvas);
+  margin-left: var(--cite-space-6);
 }
 
 .t-staff {
-  background: var(--primary-soft);
+  background: var(--cite-info-bg);
 }
 
 .t-who {
   display: block;
-  font-size: 0.78rem;
+  font-size: var(--cite-text-small);
   font-weight: 600;
-  color: var(--ink-soft);
+  color: var(--cite-muted);
+}
+
+.t-staff .t-who,
+.t-staff .t-time {
+  color: var(--cite-info-text);
 }
 
 .t-time,
 .tl-time {
   font-weight: 400;
-  color: var(--ink-soft);
-  font-size: 0.78rem;
+  color: var(--cite-muted);
+  font-size: var(--cite-text-small);
+  font-variant-numeric: tabular-nums;
 }
 
 .t-text,
@@ -336,9 +554,9 @@ body:has(.console) {
 }
 
 .t-card {
-  border: 1px dashed var(--line-strong);
-  border-radius: var(--radius-small);
-  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--cite-input-border);
+  border-radius: var(--cite-radius-md);
+  padding: var(--cite-space-2) var(--cite-space-3);
 }
 
 .t-card-title {
@@ -349,8 +567,8 @@ body:has(.console) {
 .t-card ul,
 .decision-rows,
 .history {
-  margin: 0.3rem 0;
-  padding-left: 1.1rem;
+  margin: var(--cite-space-1) 0;
+  padding-left: var(--cite-space-5);
 }
 
 .timeline {
@@ -360,28 +578,30 @@ body:has(.console) {
 }
 
 .tl {
-  border-left: 3px solid var(--c-line);
-  padding: 0.25rem 0 0.6rem 0.7rem;
+  border-top: 1px solid var(--cite-rule);
+  padding: var(--cite-space-2) 0;
 }
 
-.tl-tool {
-  border-left-color: var(--primary);
+.tl:first-child {
+  border-top: none;
+  padding-top: 0;
 }
 
 .tl-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
-  margin: 0.1rem 0;
+  gap: var(--cite-space-1) var(--cite-space-2);
+  margin: var(--cite-space-1) 0;
   font-weight: 600;
 }
 
 .tl details pre {
-  background: var(--c-bg);
-  border: 1px solid var(--c-line);
-  padding: 0.4rem;
-  font-size: 0.78rem;
+  background: var(--cite-canvas);
+  border: 1px solid var(--cite-rule);
+  border-radius: var(--cite-radius-md);
+  padding: var(--cite-space-2);
+  font-size: var(--cite-text-small);
   overflow-x: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -389,58 +609,56 @@ body:has(.console) {
 
 .tl summary {
   cursor: pointer;
-  min-height: 32px;
-  font-size: 0.85rem;
-  color: var(--primary);
+  min-height: 2rem;
+  font-size: var(--cite-text-small);
+  color: var(--cite-link);
 }
 
 .checks-head {
-  margin: 0.3rem 0 0.1rem;
-  font-size: 0.85rem;
+  margin: var(--cite-space-1) 0;
+  font-size: var(--cite-text-small);
 }
 
 .check-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.82rem;
+  font-size: var(--cite-text-small);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cite-space-1);
 }
 
 .check-list li {
-  padding: 0.1rem 0;
+  padding: 2px 0;
+}
+
+/* A failing check needs attention: danger tint and line; passing checks stay plain. */
+.check-list li:has(.badge-bad) {
+  background: var(--cite-danger-bg);
+  color: var(--cite-danger-text);
+  border: 1px solid var(--cite-danger-line);
+  border-radius: var(--cite-radius-md);
+  padding: 2px var(--cite-space-2);
 }
 
 .decision {
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-small);
-  padding: 0.6rem 0.75rem;
-  margin-bottom: 0.75rem;
+  border: 1px solid var(--cite-border);
+  border-radius: var(--cite-radius-md);
+  padding: var(--cite-space-3);
+  margin-bottom: var(--cite-space-3);
 }
 
 .decision h3 {
   margin-top: 0;
 }
 
-.button-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-button.danger {
-  background: var(--bad);
-  border-color: var(--bad);
-  color: #fff;
-  font-weight: 600;
-}
-
 .reject-form,
 .staff-message {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  margin-top: 0.5rem;
+  gap: var(--cite-space-2);
+  margin-top: var(--cite-space-2);
 }
 
 .reject-form .button-row,
@@ -451,56 +669,55 @@ button.danger {
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--cite-space-2);
 }
 
-.chip {
-  border-radius: 999px;
-  font-size: 0.85rem;
-}
-
-.customer {
+.customer,
+.status-card dl {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.15rem 0.75rem;
-  margin: 0 0 0.75rem;
-  font-size: 0.9rem;
+  gap: var(--cite-space-1) var(--cite-space-3);
+  margin: 0 0 var(--cite-space-3);
 }
 
-.customer dt {
-  color: var(--ink-soft);
+.customer dt,
+.status-card dt {
+  color: var(--cite-muted);
 }
 
-.customer dd {
+.customer dd,
+.status-card dd {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
-/* calendar */
+/* --- calendar --------------------------------------------------------------------------------- */
+
 .tech {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--cite-space-5);
 }
 
 .week {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-  gap: 0.5rem;
+  gap: var(--cite-space-2);
 }
 
 .day {
-  background: var(--surface);
-  border: 1px solid var(--c-line);
-  border-radius: var(--radius-small);
-  padding: 0.4rem 0.5rem;
+  padding: var(--cite-tile-padding);
 }
 
 .day h3 {
-  margin: 0 0 0.3rem;
-  font-size: 0.85rem;
+  margin: 0 0 var(--cite-space-1);
+  font-size: var(--cite-text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cite-muted);
 }
 
 .day .muted {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--cite-text-small);
 }
 
 .slots {
@@ -513,50 +730,55 @@ button.danger {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.2rem 0.4rem;
-  padding: 0.25rem 0;
-  border-top: 1px solid var(--c-line);
-  font-size: 0.82rem;
+  gap: 2px var(--cite-space-2);
+  padding: var(--cite-space-1) 0;
+  border-top: 1px solid var(--cite-rule);
+  font-size: var(--cite-text-small);
+}
+
+.slot:first-child {
+  border-top: none;
 }
 
 .slot-time {
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
   min-width: 6.5rem;
 }
 
 .slot-detail {
   flex-basis: 100%;
-  color: var(--ink-soft);
+  color: var(--cite-muted);
 }
 
-/* outbox */
+/* --- outbox ----------------------------------------------------------------------------------- */
+
 .drafts {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--cite-space-4);
 }
 
 .draft {
-  background: var(--surface);
-  border: 1px solid var(--c-line);
-  border-radius: var(--radius-small);
-  padding: 0.6rem 0.75rem;
+  padding: var(--cite-card-padding);
 }
 
 .draft-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.4rem;
+  gap: var(--cite-space-2);
+  margin-bottom: var(--cite-space-2);
 }
 
 .draft button {
-  margin-top: 0.5rem;
+  margin-top: var(--cite-space-2);
 }
+
+/* --- narrow screens (the console keeps its own breakpoints) ----------------------------------- */
 
 @media (max-width: 1100px) {
   .detail {
@@ -592,13 +814,18 @@ button.danger {
   }
 
   .table tr {
-    border-bottom: 2px solid var(--c-line);
-    padding: 0.35rem 0;
+    border-top: 1px solid var(--cite-rule);
+    padding: var(--cite-space-2) 0;
   }
 
-  .table td {
+  .table tbody tr:first-child {
+    border-top: none;
+  }
+
+  .table td,
+  .table tbody tr:first-child td {
     border: none;
-    padding: 0.15rem 0.6rem;
+    padding: 2px var(--cite-space-3);
   }
 
   .table td.num {
@@ -609,7 +836,66 @@ button.danger {
     content: attr(data-label);
     display: inline-block;
     min-width: 5rem;
-    color: var(--ink-soft);
-    font-size: 0.8rem;
+    color: var(--cite-muted);
+    font-size: var(--cite-text-label);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+@media (max-width: 30rem) {
+  .console h1 {
+    font-size: 1.5rem;
+  }
+
+  .console main {
+    padding: var(--cite-space-4);
+  }
+
+  .col,
+  .status-card,
+  .draft,
+  .empty {
+    padding: var(--cite-space-4);
+  }
+}
+
+/* --- print: one column, dark text on white, no shadows or tints ------------------------------ */
+
+@media print {
+  /* Light system colors on paper, also when the screen theme is dark. */
+  body,
+  body * {
+    color-scheme: light !important;
+    color: CanvasText !important;
+    background: Canvas !important;
+    box-shadow: none !important;
+  }
+
+  .skip,
+  .console nav,
+  .console button {
+    display: none;
+  }
+
+  .detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detail > :first-child {
+    grid-column: 1;
+  }
+
+  /* In-app links (#/...) print as text only; an external link prints its address. */
+  .console a[href^="http"]::after {
+    content: " (" attr(href) ")";
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
   }
 }
