@@ -59,9 +59,9 @@ const EDGE_PAIRS = [
   ["input-border", "canvas"],
   ["focus", "surface"],
   ["focus", "canvas"],
+  ["primary", "surface"],
+  ["primary", "canvas"],
 ];
-// Not listed: the navy current-page line and button fill on Surface. In the dark theme the pair is
-// 2.6:1; the current page is also shown by its Ink, 600-weight text, and buttons by their text.
 
 describe("console design tokens", () => {
   it("console.css types no color of its own", () => {
