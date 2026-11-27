@@ -33,8 +33,8 @@ from citebook.db import connect, migrate
 from citebook.kb import FakeKB, KnowledgeBase, Passage, RagProjectKB
 from citebook.models import Ablation
 from citebook.prompts import PROMPT_VERSION
+from citebook.providers import make_provider
 from citebook.providers.base import ModelProvider
-from citebook.providers.ollama import OllamaProvider
 from tools.eval_common import CANCEL, CONFIRM, SCENARIO_FILE, file_hash, load_scenarios
 from tools.seed_calendar import state_now
 from tools.seed_db import load_seed
@@ -336,11 +336,7 @@ def main(
                 record = json.loads(line)
                 done.add((record["id"], record["repeat"]))
 
-    factory = provider_factory or (
-        lambda s, think: OllamaProvider(
-            s.ollama_url, s.model, think=think, timeout=s.turn_timeout_s
-        )
-    )
+    factory = provider_factory or make_provider
     provider = factory(base, args.think)
     kb = make_kb(args.kb, base.kb_url)
     todo = [
@@ -349,8 +345,11 @@ def main(
     print(f"{len(todo)} runs to do ({len(done)} already in {results}).")
     for number, (scenario, repeat) in enumerate(todo, 1):
         started = time.perf_counter()
+        used = dict(getattr(provider, "usage", {}))
         record = run_scenario(scenario, repeat, provider, kb, args.ablation, args.think)
         record["seconds"] = round(time.perf_counter() - started, 1)
+        if hasattr(provider, "usage"):  # API usage fields for this run (hosted provider)
+            record["usage"] = {k: v - used.get(k, 0) for k, v in provider.usage.items()}
         with results.open("a", encoding="utf-8") as out:
             out.write(json.dumps(record, ensure_ascii=False) + "\n")
         print(

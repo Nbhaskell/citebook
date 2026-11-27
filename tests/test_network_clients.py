@@ -26,6 +26,7 @@ NETWORK = {
     "websockets",
     "twilio",
     "boto3",
+    "anthropic",
 }
 ALLOWED = {"kb.py"}  # plus everything in citebook/providers/
 NEVER = {"smtplib", "poplib", "imaplib", "twilio", "boto3"}

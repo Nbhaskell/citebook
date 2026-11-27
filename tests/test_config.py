@@ -24,6 +24,7 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "CITEBOOK_SYNTHETIC_DATA",
         "CITEBOOK_ABLATION",
         "CITEBOOK_EVAL",
+        "ANTHROPIC_API_KEY",
     ]:
         monkeypatch.delenv(name, raising=False)
 
@@ -64,10 +65,11 @@ def test_hosted_provider_needs_explicit_opt_in(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setenv("CITEBOOK_MODEL_PROVIDER", "hosted")
     with pytest.raises(ValidationError, match="CITEBOOK_ALLOW_HOSTED"):
         make()
-    # With the opt-in, the API still refuses: this version has no hosted provider (D-093).
     monkeypatch.setenv("CITEBOOK_ALLOW_HOSTED", "true")
-    with pytest.raises(ValidationError, match="no hosted model provider"):
-        make()
+    with pytest.raises(ValidationError, match="needs a Claude model"):
+        make()  # the Ollama default model name is not sent to the hosted API
+    monkeypatch.setenv("CITEBOOK_MODEL", "claude-haiku-5-5")
+    assert make().model_provider == "hosted"
 
 
 @pytest.mark.parametrize("value", ["baseline", "no_gate_policy", "no_reply_checks"])
