@@ -128,6 +128,7 @@ def test_no_tools_offered_but_tool_history_sends_definitions_that_cannot_be_call
     hosted.chat(HISTORY, [])
     assert client.bodies[0]["tool_choice"] == {"type": "none"}
     assert client.bodies[0]["tools"]
+    assert hosted.usage["no_tool_calls"] == 1
 
 
 def test_thinking_setting_maps_to_adaptive() -> None:
@@ -148,6 +149,7 @@ def test_api_errors_become_model_unavailable_without_details() -> None:
     hosted, _ = provider(anthropic.APIConnectionError(request=request))
     with pytest.raises(ModelUnavailable, match=r"^APIConnectionError$"):
         hosted.chat(HISTORY[:3], [TOOL])
+    assert hosted.usage["errors"] == 1
 
 
 def test_factory_builds_ollama_by_default_and_hosted_only_when_asked(

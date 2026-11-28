@@ -150,6 +150,7 @@ class HostedProvider:
         try:
             response = self.client.with_options(timeout=self.timeout).messages.create(**body)
         except anthropic.APIError as error:
+            self.usage["errors"] += 1
             raise ModelUnavailable(type(error).__name__) from None
         for field in (
             "input_tokens",
@@ -159,4 +160,5 @@ class HostedProvider:
         ):
             self.usage[field] += getattr(response.usage, field, None) or 0
         self.usage["calls"] += 1
+        self.usage["no_tool_calls"] += body.get("tool_choice") == {"type": "none"}
         return parse(response, int((time.perf_counter() - started) * 1000))
