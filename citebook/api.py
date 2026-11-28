@@ -38,8 +38,8 @@ from citebook.kb import FakeKB, KnowledgeBase, RagProjectKB
 from citebook.loop import ConversationEnded, LoopConfig, _card, add_message, handle_message
 from citebook.models import Ablation, ActionType, Actor
 from citebook.outbox import booking_fields
+from citebook.providers import make_provider
 from citebook.providers.base import ModelProvider
-from citebook.providers.ollama import OllamaProvider
 from citebook.staff_api import router as staff_router
 from citebook.timeutil import to_utc_text
 from citebook.tools.common import load_settings
@@ -263,12 +263,7 @@ def create_app(
         if provider is not None:
             return provider
         if "provider" not in parts:
-            parts["provider"] = OllamaProvider(
-                settings.ollama_url,
-                settings.model,
-                think=settings.enable_thinking,
-                timeout=settings.turn_timeout_s,
-            )
+            parts["provider"] = make_provider(settings, settings.enable_thinking)
         made: ModelProvider = parts["provider"]  # type: ignore[assignment]
         return made
 

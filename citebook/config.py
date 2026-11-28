@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from citebook.models import Ablation
@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     turn_timeout_s: float = Field(default=60.0, gt=0, validation_alias="CITEBOOK_TURN_TIMEOUT_S")
 
     allow_hosted: bool = Field(default=False, validation_alias="CITEBOOK_ALLOW_HOSTED")
+    # Read only by the hosted provider; never printed or logged (D-099).
+    anthropic_api_key: SecretStr | None = Field(default=None, validation_alias="ANTHROPIC_API_KEY")
     synthetic_data: bool = Field(default=True, validation_alias="CITEBOOK_SYNTHETIC_DATA")
 
     # A demo clock: when set, the app's time starts here and runs forward from the moment the
@@ -73,12 +75,10 @@ class Settings(BaseSettings):
                 "CITEBOOK_MODEL_PROVIDER=hosted requires CITEBOOK_ALLOW_HOSTED=true. "
                 "Hosted models send conversation text to a third party and are off by default."
             )
-        if self.model_provider == "hosted":
-            # The opt-in exists, the provider does not: refuse rather than run the local
-            # model under a setting that says otherwise (D-093).
+        if self.model_provider == "hosted" and not self.model.startswith("claude-"):
             raise ValueError(
-                "CITEBOOK_MODEL_PROVIDER=hosted: this version has no hosted model provider. "
-                "Use ollama (the default)."
+                "CITEBOOK_MODEL_PROVIDER=hosted needs a Claude model in CITEBOOK_MODEL, "
+                "e.g. claude-haiku-5-5 (D-099)."
             )
         if self.ablation != Ablation.NONE and not self.eval_mode:
             raise ValueError(
